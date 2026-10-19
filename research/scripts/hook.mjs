@@ -62,7 +62,7 @@ const handlers = {
     const structured = L.pipeline.parseStructured(i.tool_response);
     if (!structured) return;
     const { dir } = L.ledger.resolveLedger({ cwd: i.cwd });
-    const { added, text } = L.pipeline.ingest(dir, m[1], i.tool_input || {}, structured, { id: i.tool_use_id, agent: i.agent_type || null }, { shell: hasShell(i) });
+    const { added, text } = L.pipeline.ingest(dir, m[1], i.tool_input || {}, structured, { id: i.tool_use_id, agent: i.agent_type || null, agent_id: i.agent_id || null }, { shell: hasShell(i) });
     if (!text) return;
     if (L.config.config().compact_tool_output) {
       emit({ hookSpecificOutput: { hookEventName: 'PostToolUse', updatedToolOutput: text } });
@@ -84,8 +84,8 @@ const handlers = {
     if (rel.split(path.sep).includes('evidence')) return;
     const run = L.runs.runOfPath(abs, i.cwd);
     const dir = run ? path.join(run, 'evidence') : L.ledger.resolveLedger({ cwd: i.cwd }).dir;
-    const known = new Set(L.ledger.quotes(dir).map((q) => q.id));
-    const r = L.doc.verifyDoc(fs.readFileSync(abs, 'utf8'), known);
+    const byId = new Map(L.ledger.quotes(dir).map((q) => [q.id, q]));
+    const r = L.doc.verifyDoc(fs.readFileSync(abs, 'utf8'), new Set(byId.keys()), byId);
     const hint = hasShell(i) ? 'rpp ledger find "<text>"' : "a Grep of the run's evidence/quotes.jsonl";
     const msgs = [];
     if (r.unknown.length) {
@@ -95,6 +95,13 @@ const handlers = {
     if (!exempt && r.uncited.length) {
       const sample = r.uncited.slice(0, 3).map((u) => `line ${u.line}: "${u.text}"`).join('; ');
       msgs.push(`${rel} has ${r.uncited.length} sentence(s) with numbers, versions, dates or prices and no citation (${sample}). Add [E-xxxxxx] or mark them unverified.`);
+    }
+    if (!exempt && r.mismatch.length) {
+      const sample = r.mismatch.slice(0, 3).map((m) => `line ${m.line}: ${m.numbers.join(', ')} is not in ${m.ids.join(' ')}`).join('; ');
+      msgs.push(`${rel} cites quotes that do not state the numbers beside them (${sample}). Cite the quote that states each number, or say it is inferred or computed.`);
+    }
+    if (!exempt && r.thin.length) {
+      msgs.push(`${rel} cites page-chrome quotes (mostly links, no statement): ${r.thin.slice(0, 4).map((t) => `${t.id} (line ${t.line})`).join(', ')}. They show a link exists, not what the page says; re-read the source with a sharper requirement.`);
     }
     if (msgs.length) emit({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: msgs.join('\n') } });
   },
@@ -124,7 +131,7 @@ const handlers = {
       `topic from file: "${clean(s.topic, 100)}"`,
       `last recorded next step (from file): "${clean(s.next, 120)}"`,
       `notes: ${list('notes') || '-'}${s.type === 'corpus' ? `; entities: ${list('entities') || '-'}; compare: ${list('compare') || '-'}` : ''}`,
-      `ledger: ${st.quotes} quotes from ${st.sources_with_quotes} sources; ${st.urls_at_attempt_cap.length} URL(s) at the two-attempt cap`,
+      `ledger: ${st.quotes} quotes from ${st.sources_with_quotes} sources; ${st.urls_at_read_ceiling.length} URL(s) at the read ceiling`,
       `charter.md excerpt (file content):\n${read('charter.md', 1500)}`,
       `Re-read ${rel}/charter.md and state.json before the next step. Continue with /research:deep ${rel}.`,
     ].join('\n') } });

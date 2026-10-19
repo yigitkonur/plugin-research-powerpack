@@ -1,5 +1,6 @@
 // Compact renderings of Research Powerpack output. Every verbatim quote is kept (with its stable ID);
 // boilerplate, duplicated statements and per-source warning blocks are dropped.
+import { isThin } from './doc.mjs';
 import { quoteId } from './ledger.mjs';
 
 const cut = (s, n) => (s && s.length > n ? s.slice(0, n - 1) + '…' : s || '');
@@ -13,28 +14,47 @@ const QUOTE_CAP = 700;
 const SEARCH_SHOWN = 12;
 const SNIPPETS_SHOWN = 8;
 
+// What the page says about itself: author and dates exist for Reddit posts and a few articles. Saying
+// "no page date" stops an agent from treating the read date as the publication date.
+const pageMeta = (m = {}) => {
+  const bits = [];
+  if (m.author) bits.push(`by ${cut(oneLine(m.author), 40)}`);
+  if (m.published_at) bits.push(`published ${String(m.published_at).slice(0, 10)}`);
+  if (m.updated_at) bits.push(`updated ${String(m.updated_at).slice(0, 10)}`);
+  return bits.length ? bits.join(' · ') : 'no page date';
+};
+
 export function compactExtract(s, counts = new Map(), { shell = true } = {}) {
   const getHint = (id) => (shell ? `rpp ledger get ${id}` : `Grep ${id} in the run's evidence/quotes.jsonl`);
   const out = [];
   const nSrc = (s.sources || []).length;
   out.push(`extract-evidence · status=${s.status} · ${nSrc} source${nSrc === 1 ? '' : 's'}${s.output_truncated ? ' · OUTPUT TRUNCATED' : ''}`);
   out.push(`Only the quotes below are evidence. Cite them as [E-xxxxxx]; full text: ${getHint('E-xxxxxx')}.`);
+  // Every source answers the same requirements, so print their text once.
+  const legend = new Map();
+  for (const src of s.sources || []) for (const r of src.requirements || []) if (!legend.has(r.id)) legend.set(r.id, r.text);
+  if (legend.size) out.push(`requirements: ${[...legend].map(([id, t]) => `${id} ${cut(oneLine(t), 110)}`).join(' · ')}`);
+  let anyThin = false;
   for (const src of s.sources || []) {
-    const meta = [src.retrieval_status, src.extraction_status && `extraction ${src.extraction_status}`, src.source?.completeness && `${src.source.completeness} text`]
+    const meta = [src.retrieval_status, src.extraction_status && `extraction ${src.extraction_status}`, src.source?.completeness && `${src.source.completeness} text`, pageMeta(src.source)]
       .filter(Boolean).join(', ');
     out.push('');
-    out.push(`== ${src.url}${src.source?.title ? ` · "${oneLine(src.source.title)}"` : ''} · ${meta}${counts.has(src.url) ? ` · extract attempts ${counts.get(src.url)}/2` : ''}`);
+    out.push(`== ${src.url}${src.source?.title ? ` · "${oneLine(src.source.title)}"` : ''} · ${meta}${counts.has(src.url) ? ` · read ${counts.get(src.url)}/4 in this run` : ''}`);
+    const bare = new Map(); // requirements with no quote, grouped by status
     for (const r of src.requirements || []) {
-      out.push(` ${r.id} [${r.status}] ${cut(oneLine(r.text), 120)}`);
-      for (const f of r.findings || []) {
-        for (const c of f.citations || []) {
-          const id = quoteId(src.url, c.quote);
-          const q = oneLine(c.quote);
-          const shown = q.length > QUOTE_CAP ? `${q.slice(0, QUOTE_CAP)}…[+${q.length - QUOTE_CAP} chars, full: ${getHint(id)}]` : q;
-          out.push(`   ${id} ${lines(c.locator)}${c.locator?.heading ? ` (${cut(oneLine(c.locator.heading), 40)})` : ''}: “${shown}”`);
-        }
+      const cites = (r.findings || []).flatMap((f) => f.citations || []);
+      if (!cites.length) { bare.set(r.status, [...(bare.get(r.status) || []), r.id]); continue; }
+      out.push(` ${r.id} [${r.status}]`);
+      for (const c of cites) {
+        const id = quoteId(src.url, c.quote);
+        const q = oneLine(c.quote);
+        const thin = isThin(c.quote);
+        anyThin ||= thin;
+        const shown = q.length > QUOTE_CAP ? `${q.slice(0, QUOTE_CAP)}…[+${q.length - QUOTE_CAP} chars, full: ${getHint(id)}]` : q;
+        out.push(`   ${id} ${lines(c.locator)}${c.locator?.heading ? ` (${cut(oneLine(c.locator.heading), 40)})` : ''}${thin ? ' ⚠thin' : ''}: “${shown}”`);
       }
     }
+    if (bare.size) out.push(` no quote: ${[...bare].map(([st, ids]) => `${ids.join(' ')} [${st}]`).join(' · ')}`);
     const warns = (src.warnings || []).filter((w) => !BOILERPLATE.test(w));
     for (const w of warns) out.push(` warning: ${cut(oneLine(w), 240)}`);
     const fu = (src.follow_up_signals || []).map((x) => `${x.kind}:${x.value}`);
@@ -48,10 +68,11 @@ export function compactExtract(s, counts = new Map(), { shell = true } = {}) {
   const retry = (s.retry?.sources || []).map((x) => (typeof x === 'string' ? x : x.url));
   if (retry.length) {
     out.push(`retry (pending, not "not-found"): ${retry.join(' ')}`);
-    out.push('  call extract-evidence again with exactly these URLs and the original requirements; each URL allows two invocations in total.');
+    out.push('  call extract-evidence once more with exactly these URLs and the original requirements; the server allows one retry per URL.');
   }
   const warn = (s.warnings || []).filter((w) => !BOILERPLATE.test(w));
   for (const w of warn) out.push(`warning: ${cut(oneLine(w), 240)}`);
+  if (anyThin) out.push('⚠thin = mostly link or image markup: it shows a link exists, not what the page says. Do not rest a claim on it; ask again with a requirement that names the sentence you need.');
   return out.join('\n');
 }
 

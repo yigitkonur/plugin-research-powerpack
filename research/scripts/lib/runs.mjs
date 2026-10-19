@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { verifyDoc } from './doc.mjs';
 import { outputRoot, quotes, SLUG_RE } from './ledger.mjs';
+import { structureProblems } from './structure.mjs';
 
 export const PHASES = ['charter', 'research', 'synthesis', 'audit', 'finalizing', 'done'];
 export const TYPES = ['report', 'brief', 'corpus'];
@@ -111,11 +112,11 @@ export function setPhase(runDir, phase, { next, waves } = {}, cwd) {
   return s;
 }
 
-// Mechanical gate for entering "finalizing" or "done": a passing audit verdict and clean citations.
-export function gateProblems(runDir, phase) {
+// Citation and structure problems in a run's documents. Used by `rpp verify <run>` and by the phase gate.
+export function checkRun(runDir) {
   const problems = [];
-  if (auditVerdict(runDir) !== 'pass') problems.push('audit.md is missing or has no "Verdict: pass" line');
-  const known = new Set(quotes(path.join(runDir, 'evidence')).map((q) => q.id));
+  const byId = new Map(quotes(path.join(runDir, 'evidence')).map((q) => [q.id, q]));
+  const known = new Set(byId.keys());
   const docs = ['draft.md', 'summary.md'];
   for (const d of ['compare', 'entities']) {
     try { for (const f of fs.readdirSync(path.join(runDir, d))) if (f.endsWith('.md')) docs.push(path.join(d, f)); } catch { /* none */ }
@@ -123,10 +124,20 @@ export function gateProblems(runDir, phase) {
   for (const rel of docs) {
     let text;
     try { text = fs.readFileSync(path.join(runDir, rel), 'utf8'); } catch { continue; }
-    const r = verifyDoc(text, known);
+    const r = verifyDoc(text, known, byId);
     for (const u of r.unknown) problems.push(`${rel} line ${u.line}: ${u.id} is not in the ledger`);
     if (r.uncited.length) problems.push(`${rel}: ${r.uncited.length} uncited numeric claim(s), first at line ${r.uncited[0].line}: "${r.uncited[0].text.slice(0, 80)}"`);
+    for (const m of r.mismatch) problems.push(`${rel} line ${m.line}: ${m.numbers.join(', ')} not stated by the cited quote(s) ${m.ids.join(' ')}; cite the quote that states it or mark the number inferred or computed`);
   }
+  problems.push(...structureProblems(runDir));
+  return problems;
+}
+
+// Mechanical gate for entering "finalizing" or "done": a passing audit verdict, clean citations and structure.
+export function gateProblems(runDir, phase) {
+  const problems = [];
+  if (auditVerdict(runDir) !== 'pass') problems.push('audit.md is missing or has no "Verdict: pass" line');
+  problems.push(...checkRun(runDir));
   if (phase === 'done') {
     const type = (readState(runDir) || {}).type;
     const want = type === 'corpus' ? ['summary.md', 'README.md'] : ['report.md', 'README.md'];

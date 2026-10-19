@@ -4,10 +4,44 @@ const HAS_ID = /E-[0-9a-f]{6}/;
 const APPENDIX_START = '<!-- research:appendix:start -->';
 const APPENDIX_END = '<!-- research:appendix:end -->';
 
-// Numbers, versions, years, prices, percentages and sized quantities need a citation.
-const CLAIM = /(\$\s?\d|\d\s?%|\bv?\d+\.\d+(?:\.\d+)?\b|\b(?:19|20)\d{2}\b|\b\d{1,3}(?:,\d{3})+\b|\b\d+(?:\.\d+)?\s?(?:ms|sec|seconds|minutes|hours|days|kb|mb|gb|tb|x|requests|users|stars|tokens)\b)/i;
-const EXEMPT_SENTENCE = /\bunverified\b|\bnot established\b|\bno public data\b|\binsufficient evidence\b/i;
+// Numbers, versions, years, prices, percentages and sized quantities need a citation. A bare integer after a
+// product name ("Node 22") is not matched: on the finished runs it flagged mostly scope statements about the
+// user's own project, so this gate is a floor and the auditor covers the rest.
+const NUMBERS = /\$\s?\d[\d,]*(?:\.\d+)?|\d+(?:\.\d+)?\s?%|(?<![\d.])v?\d+\.\d+(?:\.\d+)*\b|\b(?:19|20)\d{2}\b|\b\d{1,3}(?:,\d{3})+\b|\b\d+(?:\.\d+)?\s?(?:ms|sec|seconds|minutes|hours|days|kb|mb|gb|tb|x|requests|users|stars|tokens)\b/gi;
+const claimTokens = (s) => [...s.matchAll(NUMBERS)].map((m) => m[0]);
+// Quantities written as words: "three times faster", "fifty percent", "fifteen dollars".
+const SPOKEN = /\b(?:(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|sixty|hundred|thousand|million|billion|dozens?|half|double|triple|twice)\s+(?:times|percent|dollars?|euros?|cents?|milliseconds?)|\w+\s+times\s+(?:as\s+)?(?:fast|faster|slow|slower|cheap|cheaper|large|larger|small|smaller|more|less|many|much)|twice\s+as\s+\w+)\b/i;
+const EXEMPT_SENTENCE = /\bunverified\b|\bnot established\b|\bno public data\b|\binsufficient evidence\b|\bunknown\b|\bunclear\b|\bnot (?:shown|stated|published)\b/i;
+// A number the sources do not state is fine when the sentence says it was worked out.
+const DERIVED = /\b(?:inferred?|inference|computed|calculated|derived|estimated?|approximately|roughly|probably|likely|presumably)\b|~\s?\d/i;
 const EXEMPT_SECTION = /gap|not established|open (?:question|decision)|limitation|assumption|methodology|scope/i;
+
+const hasClaim = (s) => claimTokens(s).length > 0 || SPOKEN.test(s);
+const digitRuns = (s) => (s.match(/\d[\d,]*(?:\.\d+)*/g) || []).map((n) => n.replace(/,/g, ''));
+const norm = (s) => s.replace(/(\d),(?=\d{3}(?!\d))/g, '$1');
+
+// Numbers in a sentence that none of its cited quotes states. A longer version in the quote ("22.12")
+// supports a shorter claim ("22"); a different number does not.
+function missingNumbers(unit, quotesText) {
+  const found = [];
+  for (const tok of claimTokens(unit)) {
+    for (const n of digitRuns(tok)) {
+      const re = new RegExp(`(?<![\\d.])${n.replace(/\./g, '\\.')}(?!\\d)`);
+      if (!quotesText.some((q) => re.test(q)) && !found.includes(n)) found.push(n);
+    }
+  }
+  return found;
+}
+
+// Page chrome: a quote that is mostly link or image markup with little prose proves only that the page
+// contains links ("[v5.0.5](…) [Latest](…)"). Terse plain facts such as "Version: 30.5" are not thin.
+export function isThin(quote) {
+  const markup = (quote.match(/!\[[^\]]*\]\([^)]*\)|\[[^\]]*\]\([^)]*\)|https?:\/\/\S+/g) || []).join('').length;
+  const unlinked = quote.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[([^\]]*)\]\([^)]*\)/g, ' $1 ').replace(/https?:\/\/\S+/g, ' ');
+  if (/\b\d{4}-\d{2}-\d{2}\b/.test(unlinked)) return false; // a dated release heading states something
+  const words = (unlinked.replace(/[#*_`>|~\\-]+/g, ' ').match(/[\p{L}\p{N}][\p{L}\p{N}'.:@/-]*/gu) || []).length;
+  return words === 0 || (markup / (quote.length || 1) >= 0.5 && words < 8);
+}
 
 export function stripAppendix(text) {
   const a = text.indexOf(APPENDIX_START);
@@ -16,11 +50,15 @@ export function stripAppendix(text) {
   return (text.slice(0, a).replace(/\s+$/, '') + '\n' + text.slice(b + APPENDIX_END.length).replace(/^\s+/, '')).replace(/\s+$/, '') + '\n';
 }
 
-export function verifyDoc(text, known) {
+// byId maps an evidence ID to its ledger row. With it, verifyDoc also reports cited numbers that the cited
+// quotes do not state (mismatch) and citations of page-chrome quotes (thin). Without it only the cheap checks run.
+export function verifyDoc(text, known, byId = new Map()) {
   const lines = stripAppendix(text).split('\n');
   const unknown = new Map();
   const cited = new Set();
   const uncited = [];
+  const mismatch = [];
+  const thin = new Map();
   let fence = false;
   let front = false;
   let exemptSection = false;
@@ -35,16 +73,34 @@ export function verifyDoc(text, known) {
     for (const id of ln.match(ID_RE) || []) {
       cited.add(id);
       if (!known.has(id) && !unknown.has(id)) unknown.set(id, i + 1);
+      const q = byId.get(id);
+      if (q && !thin.has(id) && isThin(q.quote)) thin.set(id, i + 1);
     }
     if (exemptSection) return;
-    const units = ln.trim().startsWith('|') ? [ln] : ln.split(/(?<=[.!?])\s+(?=[A-Z"“(\[*])/);
+    // A citation written after the full stop ("… default. [E-a1b2c3]") belongs to the sentence before it.
+    const joined = ln.replace(/([.!?])\s+(?=\[\s*E-[0-9a-f]{6})/g, '$1');
+    const units = joined.trim().startsWith('|') ? [joined] : joined.split(/(?<=[.!?])\s+(?=[A-Z"“(\[*])/);
     for (const u of units) {
-      if (CLAIM.test(u.replace(/E-[0-9a-f]{6}/g, '')) && !HAS_ID.test(u) && !EXEMPT_SENTENCE.test(u)) {
-        uncited.push({ line: i + 1, text: u.trim().slice(0, 140) });
+      const bare = u.replace(/E-[0-9a-f]{6}/g, '');
+      if (!HAS_ID.test(u)) {
+        if (hasClaim(bare) && !EXEMPT_SENTENCE.test(u)) uncited.push({ line: i + 1, text: u.trim().slice(0, 140) });
+        continue;
       }
+      if (DERIVED.test(u) || EXEMPT_SENTENCE.test(u)) continue;
+      // The source's URL and title count as text it states: "the 2025-03-26 spec says …" is attributed by the URL.
+      const texts = (u.match(ID_RE) || []).filter((id) => byId.has(id)).map((id) => { const q = byId.get(id); return norm(`${q.quote} ${q.url || ''} ${q.title || ''}`); });
+      if (!texts.length) continue;
+      const numbers = missingNumbers(norm(bare), texts);
+      if (numbers.length) mismatch.push({ line: i + 1, numbers, ids: [...new Set(u.match(ID_RE))], text: u.trim().slice(0, 140) });
     }
   });
-  return { cited: [...cited], unknown: [...unknown].map(([id, line]) => ({ id, line })), uncited };
+  return {
+    cited: [...cited],
+    unknown: [...unknown].map(([id, line]) => ({ id, line })),
+    uncited,
+    mismatch,
+    thin: [...thin].map(([id, line]) => ({ id, line })),
+  };
 }
 
 const CITE_GROUP = /\[\s*(E-[0-9a-f]{6}(?:\s*[,;]\s*E-[0-9a-f]{6})*)\s*\]/g;

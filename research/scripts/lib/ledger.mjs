@@ -70,16 +70,24 @@ const appendJsonl = (file, rows) => {
 export const quotes = (dir) => readJsonl(path.join(dir, 'quotes.jsonl'));
 export const sources = (dir) => readJsonl(path.join(dir, 'sources.jsonl'));
 
-// Extract attempts are claimed with exclusive file creation, so parallel agents cannot exceed the cap:
-// attempts/<sha1(url)>.<n> exists once the nth attempt for that URL has been claimed.
-const ATTEMPT_CAP = 2;
+// The server's contract: "call again for the URLs in retry.sources … at most two total tool invocations per
+// URL, including the first". That is a retry rule, so it caps repeats of the same questions on one URL.
+// A different question on a page that was read fine is not a retry; a ceiling per URL keeps cost bounded.
+// Both are claimed with exclusive file creation, so parallel agents cannot exceed them:
+//   attempts/<sha1(url)>.<n>             the nth read of this URL in this run (any questions), n <= URL_CAP
+//   attempts/<sha1(url)>.s<set>.<n>      the nth read of this URL with this exact requirement set, n <= SET_CAP
+export const SET_CAP = 2;
+export const URL_CAP = 4;
 const attemptsDir = (dir) => path.join(dir, 'attempts');
+const reqSet = (reqs) => sha1([...new Set((reqs || []).map((r) => String(r).replace(/\s+/g, ' ').trim()))].sort().join('\n')).slice(0, 10);
 
+// Reads per URL in this run (any questions).
 export function attemptCounts(dir) {
   const m = new Map();
   let names = [];
   try { names = fs.readdirSync(attemptsDir(dir)); } catch { return m; }
   for (const n of names) {
+    if (!/^[0-9a-f]{40}\.\d+$/.test(n)) continue;
     try {
       const { url } = JSON.parse(fs.readFileSync(path.join(attemptsDir(dir), n), 'utf8'));
       if (url) m.set(url, (m.get(url) || 0) + 1);
@@ -88,32 +96,48 @@ export function attemptCounts(dir) {
   return m;
 }
 
-// Claim one attempt per distinct URL. Returns the URLs that were already at the cap; in that case
-// nothing is kept, so a refused call does not consume attempts.
-export function claimAttempts(dir, urls, id) {
+// Reads of this URL with exactly this requirement set.
+export function setCount(dir, url, reqs) {
+  let names = [];
+  try { names = fs.readdirSync(attemptsDir(dir)); } catch { return 0; }
+  const prefix = `${sha1(url)}.s${reqSet(reqs)}.`;
+  return names.filter((n) => n.startsWith(prefix)).length;
+}
+
+function claimOne(file, body) {
+  try {
+    const fd = fs.openSync(file, 'wx');
+    fs.writeSync(fd, JSON.stringify(body));
+    fs.closeSync(fd);
+    return true;
+  } catch (e) {
+    if (e.code !== 'EEXIST') throw e;
+    return false;
+  }
+}
+
+// Claim one read per distinct URL. Returns { sameSet, ceiling }: the URLs whose same-question retries are
+// used up, and the URLs at the per-URL ceiling. If either is non-empty nothing is kept, so a refused call
+// consumes no attempts.
+export function claimAttempts(dir, urls, reqs, id) {
   fs.mkdirSync(attemptsDir(dir), { recursive: true });
   const ts = new Date().toISOString();
+  const key = reqSet(reqs);
   const made = [];
-  const capped = [];
+  const sameSet = [];
+  const ceiling = [];
+  const claim = (file, url) => { const ok = claimOne(file, { url, ts, id: id || null }); if (ok) made.push(file); return ok; };
   for (const url of new Set(urls)) {
     const h = sha1(url);
-    let ok = false;
-    for (let n = 1; n <= ATTEMPT_CAP && !ok; n++) {
-      const f = path.join(attemptsDir(dir), `${h}.${n}`);
-      try {
-        const fd = fs.openSync(f, 'wx');
-        fs.writeSync(fd, JSON.stringify({ url, ts, id: id || null }));
-        fs.closeSync(fd);
-        made.push(f);
-        ok = true;
-      } catch (e) {
-        if (e.code !== 'EEXIST') throw e;
-      }
-    }
-    if (!ok) capped.push(url);
+    let okSet = false;
+    for (let n = 1; n <= SET_CAP && !okSet; n++) okSet = claim(path.join(attemptsDir(dir), `${h}.s${key}.${n}`), url);
+    if (!okSet) { sameSet.push(url); continue; }
+    let okUrl = false;
+    for (let n = 1; n <= URL_CAP && !okUrl; n++) okUrl = claim(path.join(attemptsDir(dir), `${h}.${n}`), url);
+    if (!okUrl) ceiling.push(url);
   }
-  if (capped.length) for (const f of made) fs.rmSync(f, { force: true });
-  return capped;
+  if (sameSet.length || ceiling.length) for (const f of made) fs.rmSync(f, { force: true });
+  return { sameSet, ceiling };
 }
 
 // Persist a call and index its quotes. Returns the IDs that were new to the ledger.
@@ -160,6 +184,35 @@ export const findQuotes = (dir, text) => {
   return quotes(dir).filter((q) => (q.quote + ' ' + q.url + ' ' + (q.requirement || '')).toLowerCase().includes(t));
 };
 
+// What each agent did, from the stored calls: lets the orchestrator see a thin scout (few pages read,
+// no quotes, everything not-found) before it reads the notes. Calls from the main thread have no agent.
+export function agentStats(dir) {
+  const by = new Map();
+  let names = [];
+  try { names = fs.readdirSync(path.join(dir, 'calls')); } catch { return []; }
+  for (const n of names) {
+    let c;
+    try { c = JSON.parse(fs.readFileSync(path.join(dir, 'calls', n), 'utf8')); } catch { continue; }
+    const key = c.meta?.agent_id || c.meta?.agent || 'main';
+    const a = by.get(key) || { agent: c.meta?.agent || 'main', agent_id: c.meta?.agent_id || null, searches: 0, extracts: 0, urls: new Set(), quotes: new Set(), results: 0, not_found: 0 };
+    if (c.tool === 'web-search') a.searches++;
+    if (c.tool === 'extract-evidence') {
+      a.extracts++;
+      for (const u of c.input?.urls || []) a.urls.add(u);
+      for (const s of c.output?.sources || []) for (const r of s.requirements || []) {
+        a.results++;
+        if (r.status === 'not-found') a.not_found++;
+        for (const f of r.findings || []) for (const q of f.citations || []) a.quotes.add(quoteId(s.url, q.quote));
+      }
+    }
+    by.set(key, a);
+  }
+  return [...by.values()].map((a) => ({
+    agent: a.agent, agent_id: a.agent_id, searches: a.searches, extracts: a.extracts, urls_read: a.urls.size,
+    quotes: a.quotes.size, not_found_share: a.results ? Math.round((100 * a.not_found) / a.results) / 100 : null,
+  }));
+}
+
 export function stats(dir) {
   const q = quotes(dir);
   const calls = (() => { try { return fs.readdirSync(path.join(dir, 'calls')).length; } catch { return 0; } })();
@@ -170,6 +223,6 @@ export function stats(dir) {
     quotes: q.length,
     sources_with_quotes: new Set(q.map((x) => x.url)).size,
     urls_attempted: att.size,
-    urls_at_attempt_cap: [...att].filter(([, n]) => n >= 2).map(([u]) => u),
+    urls_at_read_ceiling: [...att].filter(([, n]) => n >= URL_CAP).map(([u]) => u),
   };
 }

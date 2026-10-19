@@ -26,7 +26,7 @@ Use the `rpp` command from the Bash tool.
 ```bash
 rpp ledger find "Origin header"   # search quotes by text, URL or requirement
 rpp ledger get E-aabfbf           # full quote, URL, locator, requirement, date
-rpp ledger stats                  # counts and URLs at the attempt cap
+rpp ledger stats                  # counts and URLs at the read ceiling
 rpp ledger index                  # every quote, one line each
 ```
 

@@ -57,7 +57,7 @@ Prefer primary sources: the spec, official docs, the changelog, the source repos
 
 ## Budgets and stopping
 
-- A hook enforces the limits: 20 URLs and 20 requirements per extraction, and two extraction calls per URL including the first. The compact output shows `extract attempts n/2`.
+- A hook enforces the limits: 20 URLs and 20 requirements per extraction. The server allows one retry per URL, so the hook refuses a third read of a URL with the same requirements, and a fifth read of any URL. A different question of a page you already read is fine. The compact output shows `read n/4 in this run`.
 - Retry only the URLs in the retry list, and only when the failure looks temporary. A finished read without the answer is a negative result, not a retry. A 404 is final.
 - If a source is blocked, find a mirror or archive, or report the gap.
 - Stop when every requirement has a quote or an explicit gap, or when two search waves in a row add no new high-value source. More query ideas are not a reason to continue.

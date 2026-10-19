@@ -35,7 +35,7 @@ Verified against server `mcp-researchpowerpack` v9.0.0. Run `rpp doctor` to rech
   - `follow_up_signals`, which suggest URLs or terms worth a second look
 - Output at call level: `coverage` per requirement with an independent-source count, `contradictions`, `retry` and `output_truncated`.
 - `partial` is common even when a quote answers the requirement. The server only certifies the quotation.
-- Each URL allows two invocations in total, including the first. The guard hook enforces this across agents.
+- The server's text: "call again for the URLs in `retry.sources` … at most two total tool invocations per URL, including the first." That is a retry rule. The guard hook applies it across agents to repeats of the same requirements on one URL, and adds a ceiling of four reads per URL per run. A different question of a page that was read fine is not a retry.
 
 ## Source classes worth distinguishing
 

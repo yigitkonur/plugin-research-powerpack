@@ -1,9 +1,9 @@
 // Client-side limits. The server is stateless and says the client owns retry decisions:
-// "at most two total tool invocations per URL, including the first". Shared state on disk is the
+// "at most two total tool invocations per URL, including the first" (a retry rule). Shared state on disk is the
 // only way parallel agents can respect that, so the PreToolUse hook and the CLI both call guard().
-import { attemptCounts, claimAttempts, quotes } from './ledger.mjs';
+import { attemptCounts, claimAttempts, quotes, setCount, SET_CAP, URL_CAP } from './ledger.mjs';
 
-export const LIMITS = { urls: 20, reqs: 20, reqChars: 1000, queries: 50, perUrl: 2 };
+export const LIMITS = { urls: 20, reqs: 20, reqChars: 1000, queries: 50, sameQuestions: SET_CAP, perUrl: URL_CAP };
 
 // Subagents have no shell, so they are pointed at the ledger file instead of the rpp command.
 export const findHint = (shell) => (shell
@@ -33,13 +33,17 @@ export function guard(tool, input, dir, { reserve = false, id, shell = true } = 
     return `Every URL and requirement pair in this call already has verbatim quotes in this run's ledger. Reuse them (${findHint(shell)}) or ask a different question of these pages.`;
   }
 
-  const cappedMsg = (capped) => `These URLs already used both of their extract-evidence invocations in this run: ${capped.join(' ')}. Resend without them, use quotes already in the ledger (${findHint(shell)}), or pick other sources.`;
+  const sameMsg = (list) => `These URLs were already read ${LIMITS.sameQuestions} times with these same requirements in this run: ${list.join(' ')}. The server allows one retry, and only for URLs in retry.sources; a finished read that lacks the answer is a negative result. Ask a different question of the page, use quotes already in the ledger (${findHint(shell)}), or pick other sources.`;
+  const ceilingMsg = (list) => `These URLs were already read ${LIMITS.perUrl} times in this run: ${list.join(' ')}. Resend without them, use quotes already in the ledger (${findHint(shell)}), or pick other sources.`;
   const counts = attemptCounts(dir);
-  const capped = urls.filter((u) => (counts.get(u) || 0) >= LIMITS.perUrl);
-  if (capped.length) return cappedMsg(capped);
+  const same = urls.filter((u) => setCount(dir, u, reqs) >= LIMITS.sameQuestions);
+  if (same.length) return sameMsg(same);
+  const ceil = urls.filter((u) => (counts.get(u) || 0) >= LIMITS.perUrl);
+  if (ceil.length) return ceilingMsg(ceil);
   if (reserve) {
-    const raced = claimAttempts(dir, urls, id);
-    if (raced.length) return cappedMsg(raced);
+    const raced = claimAttempts(dir, urls, reqs, id);
+    if (raced.sameSet.length) return sameMsg(raced.sameSet);
+    if (raced.ceiling.length) return ceilingMsg(raced.ceiling);
   }
   return null;
 }

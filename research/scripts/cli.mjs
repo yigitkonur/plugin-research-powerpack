@@ -5,9 +5,9 @@ import path from 'node:path';
 import { callTool, endpoint, initialize, listTools, readResource } from './lib/mcp.mjs';
 import { config, configSources } from './lib/config.mjs';
 import { guard } from './lib/budget.mjs';
-import { findQuotes, getQuote, quotes, resolveLedger, stats } from './lib/ledger.mjs';
+import { agentStats, findQuotes, getQuote, quotes, resolveLedger, stats } from './lib/ledger.mjs';
 import { ingest, parseStructured } from './lib/pipeline.mjs';
-import { auditVerdict, clean, gateProblems, initRun, listRuns, outputIsPlugin, resolveRun, runOfPath, safeDepth, safePhase, safeType, setPhase } from './lib/runs.mjs';
+import { auditVerdict, checkRun, clean, gateProblems, initRun, listRuns, outputIsPlugin, resolveRun, runOfPath, safeDepth, safePhase, safeType, setPhase } from './lib/runs.mjs';
 import { renderDoc, verifyDoc } from './lib/doc.mjs';
 
 const EXPECTED_TOOLS = {
@@ -29,7 +29,8 @@ const USAGE = `rpp <command>
   runs list [--brief] | init <slug> --topic T --type report|brief|corpus --depth D | phase <run> <phase> [--next text] | show [run]
                                   manage research run folders and their state; entering finalizing or
                                   done runs the audit gate (verdict pass, clean citations)
-  verify <file> [--lenient]       every [E-id] resolves; numeric claims carry a citation
+  verify <file> [--lenient]       every [E-id] resolves; numeric claims carry a citation and their number is in the quote
+  verify <run-dir>                the same for every document of a run, plus structure: placeholders, links, blank cells, vague gaps, charter coverage
   render <file> --out <file>      [E-id] becomes [n]; appends references and verbatim quotes
   render <file> --in-place        keep IDs; add or refresh an evidence appendix
   common flags: --raw (print the server's own text), --run <dir> (write evidence into that run)`;
@@ -214,7 +215,7 @@ function runsCmd(a) {
     case 'show': {
       const run = resolveRun(args[0], cwd);
       if (!run) throw new Error(`no run found for "${args[0] || '(active)'}"`);
-      return console.log(JSON.stringify({ dir: rel(run.dir), ...run.state, audit: auditVerdict(run.dir) }, null, 2));
+      return console.log(JSON.stringify({ dir: rel(run.dir), ...run.state, audit: auditVerdict(run.dir), agents: agentStats(path.join(run.dir, 'evidence')) }, null, 2));
     }
     default: throw new Error('usage: rpp runs <list [--brief]|init <slug> --topic T --type report|brief|corpus --depth D|phase <run> <phase> [--next text]|show [run]>');
   }
@@ -222,14 +223,25 @@ function runsCmd(a) {
 
 function verifyCmd(a) {
   const file = a._[0];
-  if (!file) throw new Error('usage: rpp verify <file> [--run dir] [--lenient]');
+  if (!file) throw new Error('usage: rpp verify <file|run-dir> [--run dir] [--lenient]');
+  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) {
+    const run = resolveRun(file, process.cwd());
+    if (!run) throw new Error(`${file} is not a research run (no state.json under the output directory)`);
+    const problems = checkRun(run.dir);
+    console.log(`verify run ${path.relative(process.cwd(), run.dir) || '.'}: ${problems.length} problem(s)`);
+    for (const p of problems) console.log(`  - ${p}`);
+    console.log(problems.length ? 'FAIL' : 'PASS');
+    process.exit(problems.length ? 1 : 0);
+  }
   const dir = ledgerDirFor(file, a);
-  const known = new Set(quotes(dir).map((q) => q.id));
-  const r = verifyDoc(fs.readFileSync(file, 'utf8'), known);
-  console.log(`verify ${file}: ${r.cited.length} distinct citation(s), ${r.unknown.length} unknown, ${r.uncited.length} uncited numeric claim(s)`);
+  const byId = new Map(quotes(dir).map((q) => [q.id, q]));
+  const r = verifyDoc(fs.readFileSync(file, 'utf8'), new Set(byId.keys()), byId);
+  console.log(`verify ${file}: ${r.cited.length} distinct citation(s), ${r.unknown.length} unknown, ${r.uncited.length} uncited numeric claim(s), ${r.mismatch.length} number(s) not in the cited quote, ${r.thin.length} thin quote(s)`);
   for (const u of r.unknown) console.log(`  unknown ${u.id} (line ${u.line}) is not in ${dir}`);
   for (const u of r.uncited) console.log(`  uncited line ${u.line}: "${u.text}"`);
-  const fail = r.unknown.length > 0 || (r.uncited.length > 0 && !a.flags.lenient);
+  for (const m of r.mismatch) console.log(`  number line ${m.line}: ${m.numbers.join(', ')} not stated by ${m.ids.join(' ')} — cite the quote that states it, or say inferred or computed: "${m.text}"`);
+  for (const t of r.thin) console.log(`  warning: ${t.id} (line ${t.line}) is page chrome (mostly links); it shows the page has links, not what it says. Re-read the source with a sharper requirement.`);
+  const fail = r.unknown.length > 0 || ((r.uncited.length > 0 || r.mismatch.length > 0) && !a.flags.lenient);
   console.log(fail ? 'FAIL' : 'PASS');
   process.exit(fail ? 1 : 0);
 }
