@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "powerpack": {
+      "type": "http",
+      "url": "${RESEARCH_MCP_URL:-https://research-mcp.yigitkonur.com/mcp}"
+    }
+  }
+}

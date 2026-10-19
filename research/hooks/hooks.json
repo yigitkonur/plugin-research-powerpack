@@ -1,0 +1,48 @@
+{
+  "description": "Research plugin: enforce Research Powerpack limits, keep a quote ledger outside the context window, check citations at write time, and survive compaction.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__(plugin_research_powerpack|mcp-researchpowerpack)__(web-search|extract-evidence)",
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hook.mjs\" guard", "timeout": 10 }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hook.mjs\" writeguard", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__(plugin_research_powerpack|mcp-researchpowerpack)__(plan-research|web-search|extract-evidence)",
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hook.mjs\" record", "timeout": 15 }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hook.mjs\" cite", "timeout": 10 }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|compact",
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hook.mjs\" session", "timeout": 10 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/hook.mjs\" stop", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}

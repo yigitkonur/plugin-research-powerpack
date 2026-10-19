@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+import('../scripts/cli.mjs')
+  .then((m) => m.main(process.argv.slice(2)))
+  .catch((e) => {
+    console.error(`rpp: ${e.message}`);
+    process.exit(1);
+  });

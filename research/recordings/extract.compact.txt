@@ -1,0 +1,18 @@
+extract-evidence · status=partial · 2 sources
+Only the quotes below are evidence. Cite them as [E-xxxxxx]; full text via `rpp ledger get E-xxxxxx`.
+
+== https://modelcontextprotocol.io/specification/2025-06-18/basic/transports · "Transports" · fetched, extraction partial, full text · extract attempts 1/2
+ r1 [partial] Which MCP specification revision introduced Streamable HTTP and did it replace HTTP+SSE?
+ r2 [partial] Must servers validate the Origin header, and why?
+   E-aabfbf L56 (Transports): “1. Servers **MUST** validate the `Origin` header on all incoming connections to prevent DNS rebinding attacks”
+ warning: 1 unverified citation(s) or finding(s) were rejected.
+
+== https://modelcontextprotocol.io/specification/2025-03-26/changelog · "Major changes" · fetched, extraction partial, full text · extract attempts 1/2
+ r1 [partial] Which MCP specification revision introduced Streamable HTTP and did it replace HTTP+SSE?
+   E-364d43 L1 (Major changes): “This document lists changes made to the Model Context Protocol (MCP) specification since the previous revision, [2024-11-05](https://modelcontextprotocol.io/specification/2024-11-05).”
+   E-1a5bc4 L6 (Major changes): “Replaced the previous HTTP+SSE transport with a more flexible **[Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http)** (PR [#206](https://github.com/modelcontextprotocol/specification/pull/206))”
+   E-d54e51 L20 (Full changelog): “For a complete list of all changes that have been made since the last protocol revision, [see GitHub](https://github.com/modelcontextprotocol/specification/compare/2024-11-05...2025-03-26).”
+ r2 [not-found] Must servers validate the Origin header, and why?
+
+coverage: r1 partial (1 source) · r2 partial (1 source)
+contradictions: none reported

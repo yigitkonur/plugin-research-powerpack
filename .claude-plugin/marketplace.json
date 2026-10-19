@@ -1,0 +1,14 @@
+{
+  "name": "plugin-devs",
+  "description": "Local plugins under development",
+  "owner": {
+    "name": "mac"
+  },
+  "plugins": [
+    {
+      "name": "research",
+      "source": "./research",
+      "description": "Evidence-grounded web research on the Research Powerpack MCP: ask, deep, verify, doctor, plus agents and ledger hooks."
+    }
+  ]
+}

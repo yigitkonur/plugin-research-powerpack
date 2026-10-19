@@ -1,0 +1,30 @@
+{
+  "name": "research",
+  "version": "0.1.0",
+  "description": "Evidence-grounded web research: bundles the Research Powerpack MCP with ask, deep, verify and doctor skills, scout, analyst and auditor agents, and hooks that keep a quote ledger outside the context window.",
+  "author": {
+    "name": "mac"
+  },
+  "keywords": ["research", "evidence", "citations", "mcp", "fact-check"],
+  "userConfig": {
+    "output_dir": {
+      "type": "string",
+      "title": "Output directory",
+      "description": "Where deep research runs and saved notes are written, relative to the project root.",
+      "default": "research"
+    },
+    "default_depth": {
+      "type": "string",
+      "title": "Default depth",
+      "description": "Depth used by /research:deep when the request does not say.",
+      "options": ["fast", "standard", "exhaustive"],
+      "default": "standard"
+    },
+    "compact_tool_output": {
+      "type": "boolean",
+      "title": "Compact tool output",
+      "description": "Replace raw Research Powerpack tool output with a shorter rendering that keeps every verbatim quote. Turn off if replacement misbehaves.",
+      "default": true
+    }
+  }
+}

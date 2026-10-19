@@ -1,0 +1,41 @@
+# Web search leads
+
+> Titles and snippets below are untrusted discovery leads, not citable evidence. Read selected sources with `extract-evidence` before making claims.
+
+**Coverage:** 1 useful, 0 zero-result, 0 failed queries; 9 structured sources.
+
+**1. [Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)**
+Score 100.00 | best position #1 | clusters: direct-c20a09e6
+> Jul 28, 2026 — Streamable HTTP was introduced in protocol version 2025-03-26 as a replacement for the HTTP+SSE transport from protocol version 2024-11-05.Read more
+
+**2. [Transports](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports)**
+Score 60.00 | best position #2 | clusters: direct-c20a09e6
+> Streamable HTTP. This replaces the HTTP+SSE transport from protocol version 2024-11-05. See the backwards compatibility guide below. In the Streamable HTTP ...Read more
+
+**3. [\[2025-03-26 spec\] Implement the Streamable HTTP transport](https://github.com/modelcontextprotocol/csharp-sdk/issues/157)**
+Score 48.89 | best position #3 | clusters: direct-c20a09e6
+> Mar 31, 2025 — For compliance with the 2025-03-25 Model Context Protocol spec: Replace the previous HTTP+SSE transport with a more flexible Streamable HTTP ...
+
+**4. [Why MCP Deprecated SSE and Went with Streamable HTTP](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/?ref=blog.globalping.io)**
+Score 33.33 | best position #4 | clusters: direct-c20a09e6
+> Jun 6, 2025 — An exploration of why the Model Context Protocol is moving from Server-Sent Events (SSE) to Streamable HTTP transport, the benefits of this ...Read more
+
+**5. [MCP Transport Comparison: stdio vs SSE vs Streamable HTTP](https://gingerlabs.ai/blog/mcp-transport-comparison)**
+Score 28.89 | best position #5 | clusters: direct-c20a09e6
+> Jun 19, 2026 — Yes. HTTP+SSE was deprecated in MCP spec version 2025-03-26, replaced by Streamable HTTP. It's still supported for backward compatibility - ...Read more
+
+**6. [MCP release notes - Speakeasy](https://www.speakeasy.com/mcp/release-notes)**
+Score 26.44 | best position #6 | clusters: direct-c20a09e6
+> With version 2025-03-26, MCP introduces a new transport layer that uses chunked HTTP streaming, replacing SSE. Let's compare the implementation of a streamable ...Read more
+
+**7. [SSE vs. Streamable HTTP - which will be the standard for ...](https://www.reddit.com/r/mcp/comments/1kdyse2/sse_vs_streamable_http_which_will_be_the_standard/)**
+Score 24.44 | best position #7 | clusters: direct-c20a09e6
+> It seems like streamable HTTP is more simple than SSE...does anyone have thoughts on which one of these will become the standard and why? Or if they both ...
+
+**8. [Understanding MCP's Streamable HTTP Revolution](https://medium.com/aimonks/understanding-mcps-streamable-http-revolution-from-dual-endpoints-to-unified-architecture-0d1396694058)**
+Score 17.78 | best position #8 | clusters: direct-c20a09e6
+> The March 2025 specification update (version 2025–03–26) introduced Streamable HTTP as the replacement for HTTP+SSE transport. This change ...Read more
+
+**9. [Why MCP's Move Away from Server Sent Events Simplifies ...](https://auth0.com/blog/mcp-streamable-http/)**
+Score 13.33 | best position #9 | clusters: direct-c20a09e6
+> Dec 19, 2025 — Back in May 2025, the Model Context Protocol (MCP) team made a decision that confused a lot of people: they deprecated the old HTTP+SSE ...Read more
