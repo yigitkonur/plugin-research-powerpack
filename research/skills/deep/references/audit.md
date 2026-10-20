@@ -4,13 +4,16 @@ The audit decides whether the deliverable can be trusted. Run it after synthesis
 
 ## Steps
 
-1. **Mechanical check.** Run `rpp verify <file>` on the draft, or on `summary.md` and every file under `compare/` and `entities/`.
+1. **Mechanical check.** Run `rpp verify <run-dir>`. It checks the draft, the summary and every file under `compare/` and `entities/`, and the structure of the run. It also warns about `⚠thin` quotes the documents cite; keep those IDs for the auditor.
    - Every ID must exist in the ledger.
    - Every sentence with a number, version, date or price must carry a citation, or be marked unverified.
+   - A cited number must appear in a cited quote. If you worked it out, say "computed" or "inferred".
+   - No placeholders, broken links, blank table cells or vague gaps, and the charter's entities and axes all have their files.
    - Fix each failure by finding the real quote, rewording the claim, or marking it unverified.
-2. **Semantic check.** Dispatch one `research:auditor` on the ten most decision-relevant claims. A quote can exist and still not support the claim. Read its table. Fix every claim it marks overstated, unsupported or contradicted.
+2. **Semantic check.** Dispatch one `research:auditor`. Its list starts with every claim that rests on a `⚠thin` quote, then fills to ten with the most decision-relevant claims. If more than ten claims rest on page-chrome quotes, re-read those sources instead of auditing them. A quote can exist and still not support the claim. Read its table. Fix every claim it marks overstated, unsupported or contradicted.
 3. **Coverage check.** Compare the deliverable against the charter. Every requirement should have quotes or an explicit gap. Every lens or entity should appear.
 4. **Honesty check.** Gaps are visible. Contradictions show both sides. Rankings name their conditions. Sentiment is attributed with a sample size.
+5. **Fresh-context read.** Read the summary as a stranger would, with no memory of the run. Can the reader act on it? Is each number traceable? Is anything inferred written in the voice of a fact?
 
 ## audit.md
 

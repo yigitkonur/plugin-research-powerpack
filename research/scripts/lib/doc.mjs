@@ -35,9 +35,10 @@ function missingNumbers(unit, quotesText) {
 
 // Page chrome: a quote that is mostly link or image markup with little prose proves only that the page
 // contains links ("[v5.0.5](…) [Latest](…)"). Terse plain facts such as "Version: 30.5" are not thin.
-export function isThin(quote) {
-  const markup = (quote.match(/!\[[^\]]*\]\([^)]*\)|\[[^\]]*\]\([^)]*\)|https?:\/\/\S+/g) || []).join('').length;
-  const unlinked = quote.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[([^\]]*)\]\([^)]*\)/g, ' $1 ').replace(/https?:\/\/\S+/g, ' ');
+export function isThin(raw) {
+  const quote = String(raw).slice(0, 20000);
+  const markup = (quote.match(/!\[[^\]\n]{0,300}\]\([^)\n]{0,500}\)|\[[^\]\n]{0,300}\]\([^)\n]{0,500}\)|https?:\/\/\S+/g) || []).join('').length;
+  const unlinked = quote.replace(/!\[[^\]\n]{0,300}\]\([^)\n]{0,500}\)/g, ' ').replace(/\[([^\]\n]{0,300})\]\([^)\n]{0,500}\)/g, ' $1 ').replace(/https?:\/\/\S+/g, ' ');
   if (/\b\d{4}-\d{2}-\d{2}\b/.test(unlinked)) return false; // a dated release heading states something
   const words = (unlinked.replace(/[#*_`>|~\\-]+/g, ' ').match(/[\p{L}\p{N}][\p{L}\p{N}'.:@/-]*/gu) || []).length;
   return words === 0 || (markup / (quote.length || 1) >= 0.5 && words < 8);
@@ -62,7 +63,8 @@ export function verifyDoc(text, known, byId = new Map()) {
   let fence = false;
   let front = false;
   let exemptSection = false;
-  lines.forEach((ln, i) => {
+  lines.forEach((rawLine, i) => {
+    const ln = rawLine.length > 5000 ? rawLine.slice(0, 5000) : rawLine; // a longer line is not prose
     if (i === 0 && ln.trim() === '---') { front = true; return; }
     if (front) { if (ln.trim() === '---') front = false; return; }
     if (/^\s*```/.test(ln)) { fence = !fence; return; }
@@ -81,7 +83,8 @@ export function verifyDoc(text, known, byId = new Map()) {
     const joined = ln.replace(/([.!?])\s+(?=\[\s*E-[0-9a-f]{6})/g, '$1');
     const units = joined.trim().startsWith('|') ? [joined] : joined.split(/(?<=[.!?])\s+(?=[A-Z"“(\[*])/);
     for (const u of units) {
-      const bare = u.replace(/E-[0-9a-f]{6}/g, '');
+      // Link targets and bare URLs are not prose: a version or percent sign inside one is not a claim.
+      const bare = u.replace(/E-[0-9a-f]{6}/g, '').replace(/\]\([^)\n]{0,500}\)/g, ']').replace(/https?:\/\/\S+/g, ' ');
       if (!HAS_ID.test(u)) {
         if (hasClaim(bare) && !EXEMPT_SENTENCE.test(u)) uncited.push({ line: i + 1, text: u.trim().slice(0, 140) });
         continue;

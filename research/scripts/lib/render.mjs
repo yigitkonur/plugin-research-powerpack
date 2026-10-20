@@ -1,7 +1,7 @@
 // Compact renderings of Research Powerpack output. Every verbatim quote is kept (with its stable ID);
 // boilerplate, duplicated statements and per-source warning blocks are dropped.
 import { isThin } from './doc.mjs';
-import { quoteId } from './ledger.mjs';
+import { quoteId, URL_CAP } from './ledger.mjs';
 
 const cut = (s, n) => (s && s.length > n ? s.slice(0, n - 1) + '…' : s || '');
 const oneLine = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
@@ -39,7 +39,7 @@ export function compactExtract(s, counts = new Map(), { shell = true } = {}) {
     const meta = [src.retrieval_status, src.extraction_status && `extraction ${src.extraction_status}`, src.source?.completeness && `${src.source.completeness} text`, pageMeta(src.source)]
       .filter(Boolean).join(', ');
     out.push('');
-    out.push(`== ${src.url}${src.source?.title ? ` · "${oneLine(src.source.title)}"` : ''} · ${meta}${counts.has(src.url) ? ` · read ${counts.get(src.url)}/4 in this run` : ''}`);
+    out.push(`== ${src.url}${src.source?.title ? ` · "${oneLine(src.source.title)}"` : ''} · ${meta}${counts.has(src.url) ? ` · read ${counts.get(src.url)}/${URL_CAP} in this run` : ''}`);
     const bare = new Map(); // requirements with no quote, grouped by status
     for (const r of src.requirements || []) {
       const cites = (r.findings || []).flatMap((f) => f.citations || []);
@@ -57,7 +57,7 @@ export function compactExtract(s, counts = new Map(), { shell = true } = {}) {
     if (bare.size) out.push(` no quote: ${[...bare].map(([st, ids]) => `${ids.join(' ')} [${st}]`).join(' · ')}`);
     const warns = (src.warnings || []).filter((w) => !BOILERPLATE.test(w));
     for (const w of warns) out.push(` warning: ${cut(oneLine(w), 240)}`);
-    const fu = (src.follow_up_signals || []).map((x) => `${x.kind}:${x.value}`);
+    const fu = (src.follow_up_signals || []).map((x) => `${cut(oneLine(x.kind), 20)}:${cut(oneLine(x.value), 200)}`);
     if (fu.length) out.push(` follow-up: ${fu.join(' · ')}`);
   }
   out.push('');
@@ -65,7 +65,7 @@ export function compactExtract(s, counts = new Map(), { shell = true } = {}) {
   if (cov.length) out.push(`coverage: ${cov.join(' · ')}`);
   const con = s.contradictions || [];
   out.push(con.length ? `contradictions (${con.length}): ${cut(oneLine(JSON.stringify(con)), 800)}` : 'contradictions: none reported');
-  const retry = (s.retry?.sources || []).map((x) => (typeof x === 'string' ? x : x.url));
+  const retry = (s.retry?.sources || []).map((x) => cut(oneLine(typeof x === 'string' ? x : x.url), 300));
   if (retry.length) {
     out.push(`retry (pending, not "not-found"): ${retry.join(' ')}`);
     out.push('  call extract-evidence once more with exactly these URLs and the original requirements; the server allows one retry per URL.');

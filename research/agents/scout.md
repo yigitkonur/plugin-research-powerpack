@@ -42,9 +42,9 @@ The method skill is loaded. Follow it for tool use, queries, requirements, statu
 2. Extract from the best primary sources with falsifiable requirements.
 3. Fill gaps with one more wave. Stop when the requirements have quotes or explicit gaps, when two waves add nothing, or when the budget is spent. The default budget is three searches and four extractions.
 
-**Write only your assigned file.** If the brief names an output file, write findings there and nowhere else. Use these sections: Findings with `[E-xxxxxx]` citations, Gaps, Contradictions, Sources read. A gap names what you searched, which sources you checked and what would settle it. Never create empty or placeholder files. If the brief names no file, return the findings in your final message.
+**Write only your assigned file.** If the brief names an output file, write findings there and nowhere else. Use these sections unless the brief names others (a corpus entity note uses the entity template): Findings with `[E-xxxxxx]` citations, Gaps, Contradictions, Sources read. A gap names what you searched, which sources you checked and what would settle it. Never create empty or placeholder files. If the brief names no file, return the findings in your final message.
 
-**Return a handback of at most 300 words:**
+**Return a handback of at most 300 words (or the smaller cap the brief sets):**
 1. Findings, each with its citation IDs.
 2. Gaps.
 3. Contradictions, with both IDs and their scope.

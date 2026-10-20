@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { verifyDoc } from './doc.mjs';
-import { outputRoot, quotes, SLUG_RE } from './ledger.mjs';
+import { outputRoot, quotes, runDirOfCwd, SLUG_RE } from './ledger.mjs';
 import { structureProblems } from './structure.mjs';
 
 export const PHASES = ['charter', 'research', 'synthesis', 'audit', 'finalizing', 'done'];
@@ -37,7 +37,7 @@ export function listRuns(cwd) {
   let active = null;
   try { active = fs.readFileSync(activeFile(cwd), 'utf8').trim(); } catch { /* none */ }
   let names = [];
-  try { names = fs.readdirSync(out, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name); } catch { /* none */ }
+  try { names = fs.readdirSync(out, { withFileTypes: true }).filter((d) => d.isDirectory() && SLUG_RE.test(d.name)).map((d) => d.name); } catch { /* none */ }
   return names
     .map((slug) => ({ slug, dir: path.join(out, slug), state: readState(path.join(out, slug)), active: slug === active }))
     .filter((r) => r.state)
@@ -49,7 +49,10 @@ export const activeRun = (cwd) => listRuns(cwd).find((r) => r.active) || null;
 // Accept a slug, a run directory, or any path inside one. Only runs directly under the output
 // directory count, so a stray state.json elsewhere in a repository is never treated as a run.
 export function resolveRun(arg, cwd) {
-  if (!arg) return activeRun(cwd);
+  if (!arg) {
+    const here = runDirOfCwd(cwd);
+    return (here && { slug: path.basename(here), dir: here, state: readState(here) }) || activeRun(cwd) || listRuns(cwd)[0] || null;
+  }
   const out = outputRoot(cwd);
   const candidates = [path.join(out, arg), path.resolve(cwd || process.cwd(), arg)];
   for (const c of candidates) {
@@ -112,16 +115,33 @@ export function setPhase(runDir, phase, { next, waves } = {}, cwd) {
   return s;
 }
 
+const runDocs = (runDir) => {
+  const docs = ['draft.md', 'summary.md'];
+  for (const d of ['compare', 'entities']) {
+    try { for (const f of fs.readdirSync(path.join(runDir, d))) if (f.endsWith('.md')) docs.push(path.join(d, f)); } catch { /* none */ }
+  }
+  return docs;
+};
+
+// Quotes of page chrome (mostly links) that the run's documents cite: a warning, not a failure.
+export function thinWarnings(runDir) {
+  const byId = new Map(quotes(path.join(runDir, 'evidence')).map((q) => [q.id, q]));
+  const out = [];
+  for (const rel of runDocs(runDir)) {
+    let text;
+    try { text = fs.readFileSync(path.join(runDir, rel), 'utf8'); } catch { continue; }
+    const ids = verifyDoc(text, new Set(byId.keys()), byId).thin.map((t) => t.id);
+    if (ids.length) out.push(`${rel} cites ${ids.length} ⚠thin quote(s) (mostly links, they show a link exists and nothing more): ${ids.join(' ')}`);
+  }
+  return out;
+}
+
 // Citation and structure problems in a run's documents. Used by `rpp verify <run>` and by the phase gate.
 export function checkRun(runDir) {
   const problems = [];
   const byId = new Map(quotes(path.join(runDir, 'evidence')).map((q) => [q.id, q]));
   const known = new Set(byId.keys());
-  const docs = ['draft.md', 'summary.md'];
-  for (const d of ['compare', 'entities']) {
-    try { for (const f of fs.readdirSync(path.join(runDir, d))) if (f.endsWith('.md')) docs.push(path.join(d, f)); } catch { /* none */ }
-  }
-  for (const rel of docs) {
+  for (const rel of runDocs(runDir)) {
     let text;
     try { text = fs.readFileSync(path.join(runDir, rel), 'utf8'); } catch { continue; }
     const r = verifyDoc(text, known, byId);

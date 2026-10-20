@@ -2,13 +2,14 @@
 // Files (one directory per run, or one per project for quick asks):
 //   calls/<ts>-<tool>-<id>.json   raw structured output, one file per call (no write contention)
 //   quotes.jsonl                  one row per verified quote
-//   attempts.jsonl                one row per URL extract attempt (the server allows two per URL)
+//   attempts/                     one claim file per extraction read of a URL (see below)
 //   sources.jsonl                 search leads
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { config } from './config.mjs';
+import { isThin } from './doc.mjs';
 
 const sha1 = (s) => crypto.createHash('sha1').update(s).digest('hex');
 export const quoteId = (url, quote) => 'E-' + sha1(url + '\n' + quote).slice(0, 6);
@@ -37,12 +38,35 @@ export const projectRoot = (cwd) => {
 };
 export const outputRoot = (cwd) => path.resolve(projectRoot(cwd), config().output_dir);
 
-// Where evidence goes: an explicit run, the active run of this project, or a per-project cache.
+// The run folder that contains cwd, if any: a model often cd's into the run, and a finished run has no
+// .active pointer any more.
+export function runDirOfCwd(cwd) {
+  let d;
+  try { d = fs.realpathSync(cwd || process.cwd()); } catch { return null; }
+  const out = outputRoot(cwd);
+  if (!d.startsWith(out + path.sep)) return null;
+  const slug = path.relative(out, d).split(path.sep)[0];
+  const runDir = path.join(out, slug);
+  const stateFile = path.join(runDir, 'state.json');
+  if (!SLUG_RE.test(slug) || !fs.existsSync(stateFile)) return null;
+  try {
+    const finished = JSON.parse(fs.readFileSync(stateFile, 'utf8')).phase === 'done';
+    let active = '';
+    try { active = fs.readFileSync(path.join(out, '.active'), 'utf8').trim(); } catch { /* none */ }
+    if (finished && active && active !== slug) return null; // another run is in progress and owns new evidence
+  } catch { /* unreadable state: treat the run as unfinished */ }
+  return runDir;
+}
+
+// Where evidence goes: an explicit run, the run whose folder we are in, the active run of this project,
+// or a per-project cache.
 export function resolveLedger({ cwd, run } = {}) {
   if (run) {
     const runDir = path.resolve(cwd || process.cwd(), run);
     return { runDir, dir: path.join(runDir, 'evidence') };
   }
+  const here = runDirOfCwd(cwd);
+  if (here) return { runDir: here, dir: path.join(here, 'evidence') };
   const out = outputRoot(cwd);
   try {
     const slug = fs.readFileSync(path.join(out, '.active'), 'utf8').trim();
@@ -67,7 +91,10 @@ const appendJsonl = (file, rows) => {
   fs.appendFileSync(file, rows.map((r) => JSON.stringify(r)).join('\n') + '\n');
 };
 
-export const quotes = (dir) => readJsonl(path.join(dir, 'quotes.jsonl'));
+export const quotes = (dir) => {
+  const seen = new Set();
+  return readJsonl(path.join(dir, 'quotes.jsonl')).filter((q) => q.id && !seen.has(q.id) && seen.add(q.id));
+};
 export const sources = (dir) => readJsonl(path.join(dir, 'sources.jsonl'));
 
 // The server's contract: "call again for the URLs in retry.sources … at most two total tool invocations per
@@ -79,6 +106,15 @@ export const sources = (dir) => readJsonl(path.join(dir, 'sources.jsonl'));
 export const SET_CAP = 2;
 export const URL_CAP = 4;
 const attemptsDir = (dir) => path.join(dir, 'attempts');
+// Claims and quotes in the per-project cache (quick questions, no run) expire: the same question weeks later
+// is a new question, and a price or a version read then may no longer be true.
+const QUICK_TTL_MS = 6 * 3600 * 1000;
+export const isRunLedger = (dir) => path.basename(dir) === 'evidence';
+export const freshTs = (dir, ts) => isRunLedger(dir) || !(Date.now() - Date.parse(ts) > QUICK_TTL_MS);
+const freshFile = (dir, file) => {
+  if (isRunLedger(dir)) return true;
+  try { return Date.now() - fs.statSync(file).mtimeMs < QUICK_TTL_MS; } catch { return false; }
+};
 const reqSet = (reqs) => sha1([...new Set((reqs || []).map((r) => String(r).replace(/\s+/g, ' ').trim()))].sort().join('\n')).slice(0, 10);
 
 // Reads per URL in this run (any questions).
@@ -87,7 +123,7 @@ export function attemptCounts(dir) {
   let names = [];
   try { names = fs.readdirSync(attemptsDir(dir)); } catch { return m; }
   for (const n of names) {
-    if (!/^[0-9a-f]{40}\.\d+$/.test(n)) continue;
+    if (!/^[0-9a-f]{40}\.\d+$/.test(n) || !freshFile(dir, path.join(attemptsDir(dir), n))) continue;
     try {
       const { url } = JSON.parse(fs.readFileSync(path.join(attemptsDir(dir), n), 'utf8'));
       if (url) m.set(url, (m.get(url) || 0) + 1);
@@ -101,19 +137,23 @@ export function setCount(dir, url, reqs) {
   let names = [];
   try { names = fs.readdirSync(attemptsDir(dir)); } catch { return 0; }
   const prefix = `${sha1(url)}.s${reqSet(reqs)}.`;
-  return names.filter((n) => n.startsWith(prefix)).length;
+  return names.filter((n) => n.startsWith(prefix) && freshFile(dir, path.join(attemptsDir(dir), n))).length;
 }
 
-function claimOne(file, body) {
-  try {
-    const fd = fs.openSync(file, 'wx');
-    fs.writeSync(fd, JSON.stringify(body));
-    fs.closeSync(fd);
-    return true;
-  } catch (e) {
-    if (e.code !== 'EEXIST') throw e;
-    return false;
+function claimOne(dir, file, body) {
+  for (let tries = 0; tries < 2; tries++) {
+    try {
+      const fd = fs.openSync(file, 'wx');
+      fs.writeSync(fd, JSON.stringify(body));
+      fs.closeSync(fd);
+      return true;
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      if (freshFile(dir, file)) return false;
+      fs.rmSync(file, { force: true }); // an expired claim: take its place
+    }
   }
+  return false;
 }
 
 // Claim one read per distinct URL. Returns { sameSet, ceiling }: the URLs whose same-question retries are
@@ -126,15 +166,20 @@ export function claimAttempts(dir, urls, reqs, id) {
   const made = [];
   const sameSet = [];
   const ceiling = [];
-  const claim = (file, url) => { const ok = claimOne(file, { url, ts, id: id || null }); if (ok) made.push(file); return ok; };
-  for (const url of new Set(urls)) {
-    const h = sha1(url);
-    let okSet = false;
-    for (let n = 1; n <= SET_CAP && !okSet; n++) okSet = claim(path.join(attemptsDir(dir), `${h}.s${key}.${n}`), url);
-    if (!okSet) { sameSet.push(url); continue; }
-    let okUrl = false;
-    for (let n = 1; n <= URL_CAP && !okUrl; n++) okUrl = claim(path.join(attemptsDir(dir), `${h}.${n}`), url);
-    if (!okUrl) ceiling.push(url);
+  const claim = (file, url) => { const ok = claimOne(dir, file, { url, ts, id: id || null }); if (ok) made.push(file); return ok; };
+  try {
+    for (const url of new Set(urls)) {
+      const h = sha1(url);
+      let okSet = false;
+      for (let n = 1; n <= SET_CAP && !okSet; n++) okSet = claim(path.join(attemptsDir(dir), `${h}.s${key}.${n}`), url);
+      if (!okSet) { sameSet.push(url); continue; }
+      let okUrl = false;
+      for (let n = 1; n <= URL_CAP && !okUrl; n++) okUrl = claim(path.join(attemptsDir(dir), `${h}.${n}`), url);
+      if (!okUrl) ceiling.push(url);
+    }
+  } catch (e) {
+    for (const f of made) fs.rmSync(f, { force: true });
+    throw e;
   }
   if (sameSet.length || ceiling.length) for (const f of made) fs.rmSync(f, { force: true });
   return { sameSet, ceiling };
@@ -163,6 +208,7 @@ export function recordCall(dir, tool, input, structured, meta = {}) {
             rows.push({
               id, url: src.url, title: src.source?.title || null, quote: c.quote, locator: c.locator || null,
               requirement: req.text, status: req.status, ts, call: callFile,
+              ...(isThin(c.quote) ? { thin: true } : {}),
             });
           }
         }

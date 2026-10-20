@@ -30,12 +30,12 @@ rpp ledger stats                  # counts and URLs at the read ceiling
 rpp ledger index                  # every quote, one line each
 ```
 
-Add `--run <dir>` to read a specific run.
+Add `--run <dir>` to read a specific run. Agents without a shell (scouts, analysts, auditors) search `quotes.jsonl` in the run's `evidence/` folder with Grep instead.
 
 ## Documents
 
 - Write citations as `[E-xxxxxx]` in the text. Do not paste long quotes into prose.
-- Run `rpp verify <file>` before delivering. It fails on unknown IDs and flags sentences with numbers, versions, dates or prices that carry no citation.
+- Run `rpp verify <file>` before delivering. It fails on unknown IDs, on sentences with numbers, versions, dates or prices that carry no citation, and on numbers that the cited quotes do not state (unless the sentence says inferred or computed). It warns about `⚠thin` quotes. `rpp verify <run-dir>` checks every document of a run and its structure. A bare major version such as "Node 22" is not checked, so cite it anyway.
 - Run `rpp render <file>` to turn IDs into numbered references with an appendix of verbatim quotes, URLs, locators and retrieval dates.
 
 ## Attribution

@@ -5,10 +5,11 @@ import path from 'node:path';
 import { callTool, endpoint, initialize, listTools, readResource } from './lib/mcp.mjs';
 import { config, configSources } from './lib/config.mjs';
 import { guard } from './lib/budget.mjs';
-import { agentStats, findQuotes, getQuote, quotes, resolveLedger, stats } from './lib/ledger.mjs';
+import { agentStats, findQuotes, getQuote, projectRoot, quotes, resolveLedger, stats } from './lib/ledger.mjs';
 import { ingest, parseStructured } from './lib/pipeline.mjs';
-import { auditVerdict, checkRun, clean, gateProblems, initRun, listRuns, outputIsPlugin, resolveRun, runOfPath, safeDepth, safePhase, safeType, setPhase } from './lib/runs.mjs';
+import { auditVerdict, checkRun, clean, gateProblems, thinWarnings, initRun, listRuns, outputIsPlugin, resolveRun, runOfPath, safeDepth, safePhase, safeType, setPhase } from './lib/runs.mjs';
 import { renderDoc, verifyDoc } from './lib/doc.mjs';
+import { unconfirmedSeed } from './lib/structure.mjs';
 
 const EXPECTED_TOOLS = {
   'plan-research': ['objective'],
@@ -82,15 +83,15 @@ async function doctor() {
   try {
     const init = await initialize();
     const info = init.serverInfo || {};
-    ok(`server ${info.name} v${info.version} at ${endpoint()} (protocol ${init.protocolVersion})`);
+    ok(`server ${clean(info.name, 60)} v${clean(info.version, 30)} at ${endpoint()} (protocol ${clean(init.protocolVersion, 30)})`);
     const rp = init.capabilities?.experimental?.research_powerpack;
     if (rp) {
-      const prof = Object.entries(rp.profiles || {}).map(([k, v]) => `${k}=${v.prompt_version}`).join(' ');
-      ok(`schema planning/search v${rp.schema_version}, extraction v${rp.extraction_output_schema_version}; ${prof}`);
-      if (rp.extraction_output_schema_version !== '3') warn(`extraction schema is v${rp.extraction_output_schema_version}; the plugin was written for v3`);
+      const prof = Object.entries(rp.profiles || {}).map(([k, v]) => `${clean(k, 30)}=${clean(v?.prompt_version, 30)}`).join(' ');
+      ok(`schema planning/search v${clean(rp.schema_version, 10)}, extraction v${clean(rp.extraction_output_schema_version, 10)}; ${prof}`);
+      if (rp.extraction_output_schema_version !== '3') warn(`extraction schema is v${clean(rp.extraction_output_schema_version, 10)}; the plugin was written for v3`);
     } else warn('server did not advertise research_powerpack capabilities');
   } catch (e) {
-    fail(`cannot reach ${endpoint()}: ${e.message}`);
+    fail(`cannot reach ${endpoint()}: ${clean(e.message, 200)}`);
     console.log(lines.join('\n'));
     process.exit(1);
   }
@@ -101,25 +102,25 @@ async function doctor() {
     for (const [name, required] of Object.entries(EXPECTED_TOOLS)) {
       const t = byName[name];
       if (!t) { fail(`tool ${name} is missing`); continue; }
-      const got = [...(t.inputSchema?.required || [])].sort().join(',');
+      const got = clean([...(t.inputSchema?.required || [])].sort().join(','), 120);
       if (got === [...required].sort().join(',')) ok(`tool ${name} (required: ${got})`);
       else fail(`tool ${name} required inputs changed: expected ${required.join(',')} got ${got}`);
     }
     const extra = tools.map((t) => t.name).filter((n) => !EXPECTED_TOOLS[n]);
-    if (extra.length) warn(`new server tools the plugin does not know: ${extra.join(', ')}`);
+    if (extra.length) warn(`new server tools the plugin does not know: ${extra.map((n) => clean(n, 40)).join(', ')}`);
   } catch (e) {
-    fail(`tools/list failed: ${e.message}`);
+    fail(`tools/list failed: ${clean(e.message, 200)}`);
   }
 
   try {
     const h = JSON.parse((await readResource('health://status')).text);
-    ok(`health ${h.status}, uptime ${h.uptime_seconds}s, content concurrency ${h.content_preparation?.concurrency}`);
+    ok(`health ${clean(h.status, 30)}, uptime ${clean(h.uptime_seconds, 20)}s, content concurrency ${clean(h.content_preparation?.concurrency, 10)}`);
   } catch (e) {
-    warn(`health resource unavailable: ${e.message}`);
+    warn(`health resource unavailable: ${clean(e.message, 200)}`);
   }
 
   const dups = findDuplicateServers();
-  if (dups.length) warn(`the same server is also configured outside the plugin, so tools may appear twice:\n    ${dups.join('\n    ')}`);
+  if (dups.length) warn(`the same server is also configured outside the plugin, so tools may appear twice:\n    ${dups.map((d) => clean(d, 200)).join('\n    ')}`);
   else ok('no duplicate user-level or project-level server entry');
 
   const cfg = config();
@@ -202,6 +203,10 @@ function runsCmd(a) {
     case 'phase': {
       const run = resolveRun(args[0], cwd);
       if (!run) throw new Error(`no run found for "${args[0]}"`);
+      if (['synthesis', 'audit', 'finalizing', 'done'].includes(args[1]) && unconfirmedSeed(run.dir) && !a.flags.force) {
+        console.error(`cannot enter phase "${args[1]}": charter.md still has "Seed (unconfirmed)". Ask the user the Entities question and replace the seed with the confirmed list.`);
+        process.exit(1);
+      }
       if (['finalizing', 'done'].includes(args[1]) && !a.flags.force) {
         const problems = gateProblems(run.dir, args[1]);
         if (problems.length) {
@@ -215,7 +220,11 @@ function runsCmd(a) {
     case 'show': {
       const run = resolveRun(args[0], cwd);
       if (!run) throw new Error(`no run found for "${args[0] || '(active)'}"`);
-      return console.log(JSON.stringify({ dir: rel(run.dir), ...run.state, audit: auditVerdict(run.dir), agents: agentStats(path.join(run.dir, 'evidence')) }, null, 2));
+      const agents = agentStats(path.join(run.dir, 'evidence'));
+      const sum = (k) => agents.reduce((n, a) => n + a[k], 0);
+      const elapsed = Math.round((Date.parse(run.state.updated) - Date.parse(run.state.created)) / 60000);
+      const totals = { searches: sum('searches'), extractions: sum('extracts'), quotes: stats(path.join(run.dir, 'evidence')).quotes, elapsed_minutes: Number.isFinite(elapsed) ? elapsed : null };
+      return console.log(JSON.stringify({ dir: rel(run.dir), ...run.state, audit: auditVerdict(run.dir), totals, agents }, null, 2));
     }
     default: throw new Error('usage: rpp runs <list [--brief]|init <slug> --topic T --type report|brief|corpus --depth D|phase <run> <phase> [--next text]|show [run]>');
   }
@@ -224,12 +233,14 @@ function runsCmd(a) {
 function verifyCmd(a) {
   const file = a._[0];
   if (!file) throw new Error('usage: rpp verify <file|run-dir> [--run dir] [--lenient]');
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) {
-    const run = resolveRun(file, process.cwd());
-    if (!run) throw new Error(`${file} is not a research run (no state.json under the output directory)`);
+  const isFile = fs.existsSync(file) && fs.statSync(file).isFile();
+  const run = isFile ? null : resolveRun(file, process.cwd());
+  if (!isFile && !run) throw new Error(`${file} is neither a file nor a research run (a slug, or a path to a run folder under the output directory)`);
+  if (run) {
     const problems = checkRun(run.dir);
     console.log(`verify run ${path.relative(process.cwd(), run.dir) || '.'}: ${problems.length} problem(s)`);
     for (const p of problems) console.log(`  - ${p}`);
+    for (const w of thinWarnings(run.dir)) console.log(`  warning: ${w}`);
     console.log(problems.length ? 'FAIL' : 'PASS');
     process.exit(problems.length ? 1 : 0);
   }
@@ -240,7 +251,7 @@ function verifyCmd(a) {
   for (const u of r.unknown) console.log(`  unknown ${u.id} (line ${u.line}) is not in ${dir}`);
   for (const u of r.uncited) console.log(`  uncited line ${u.line}: "${u.text}"`);
   for (const m of r.mismatch) console.log(`  number line ${m.line}: ${m.numbers.join(', ')} not stated by ${m.ids.join(' ')} — cite the quote that states it, or say inferred or computed: "${m.text}"`);
-  for (const t of r.thin) console.log(`  warning: ${t.id} (line ${t.line}) is page chrome (mostly links); it shows the page has links, not what it says. Re-read the source with a sharper requirement.`);
+  for (const t of r.thin) console.log(`  warning: ${t.id} (line ${t.line}) is ⚠thin, page chrome (mostly links); it shows the page has links, not what it says. Re-read the source with a sharper requirement.`);
   const fail = r.unknown.length > 0 || ((r.uncited.length > 0 || r.mismatch.length > 0) && !a.flags.lenient);
   console.log(fail ? 'FAIL' : 'PASS');
   process.exit(fail ? 1 : 0);
@@ -252,6 +263,12 @@ function renderCmd(a) {
   const dir = ledgerDirFor(file, a);
   const byId = new Map(quotes(dir).map((q) => [q.id, q]));
   const inPlace = Boolean(a.flags['in-place']);
+  // `Bash(rpp *)` is pre-approved, so rendering may only write inside the project.
+  const root = projectRoot(process.cwd());
+  for (const target of [inPlace ? file : null, typeof a.flags.out === 'string' ? a.flags.out : null].filter(Boolean)) {
+    const abs = path.resolve(target);
+    if (abs !== root && !abs.startsWith(root + path.sep)) throw new Error(`refusing to write ${target}: it is outside the project (${root})`);
+  }
   const r = renderDoc(fs.readFileSync(file, 'utf8'), byId, inPlace ? 'ids' : 'numbered');
   if (r.missing.length) console.error(`warning: ${r.missing.length} ID(s) not in the ledger and left unchanged: ${r.missing.join(' ')}`);
   if (inPlace) fs.writeFileSync(file, r.text);

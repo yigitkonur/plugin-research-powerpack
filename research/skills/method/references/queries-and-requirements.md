@@ -13,6 +13,7 @@ Each recipe gives the angles to cover and an example requirement. Adapt the name
 - Queries: the exact error string in quotes, the same string plus the library name and major version, the issue tracker for that library, a postmortem or workaround write-up.
 - Requirement: "What causes error '<string>' in <library> <version>, and which release fixes it?"
 - Read the local dependency versions first. State the fix per version. Prefer maintainers' comments over guesses.
+- Keep "fix committed", "fix released" and "seen fixed in the field" apart, and name the release that carries it.
 
 ## An upgrade or migration
 
@@ -30,12 +31,14 @@ Each recipe gives the angles to cover and an example requirement. Adapt the name
 
 - Queries: the advisory ID, the package plus "advisory", the fix commit, the vendor bulletin.
 - Requirements: "Which versions are affected?", "Which version fixes it?", "Is there a workaround?"
+- Ask for the identifier, severity as the authority states it, affected and fixed ranges, the mitigation and the dates. Do not infer exploitability from severity.
 - Check the affected range against the version in the lockfile.
 
 ## Pricing or plans
 
 - Queries: the pricing page, the limits or quotas page, the terms page, a recent changelog entry.
 - Requirements: "What does the <plan> cost per <unit>, and what are its limits?"
+- Ask for currency, region, billing interval, included quota and unit, overage, tax and eligibility, and the effective date. Keep current, historical and announced terms apart.
 - Quote with the retrieval date. Prices change, so say when the page was read.
 
 ## Comparing options
@@ -48,7 +51,9 @@ Each recipe gives the angles to cover and an example requirement. Adapt the name
 
 - Queries: the product plus "reddit", "hacker news", "issues", "migrating from".
 - Requirement: "What do users report about <problem>, and which workarounds do they mention?"
-- Report each opinion with handle, date and permalink. Say how many comments you read. A few comments are anecdotes, not a population.
+- Aim at least a quarter of the queries at negative signal: "regret", "switched from", "abandoned", "migrating away", "broken", "pricing". Praise is easy to find; the failures decide.
+- Report each opinion with handle, date and permalink. Reddit posts show the author and date in the source line. Say how many comments you read. A few comments are anecdotes, not a population.
+- Label each item direct (about the thing itself) or adjacent (about something near it). Note bias when you see it: a founder replying, a promotional account, a single angry support case.
 
 ## Requirement patterns
 

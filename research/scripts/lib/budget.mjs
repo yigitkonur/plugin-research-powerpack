@@ -1,7 +1,7 @@
 // Client-side limits. The server is stateless and says the client owns retry decisions:
 // "at most two total tool invocations per URL, including the first" (a retry rule). Shared state on disk is the
 // only way parallel agents can respect that, so the PreToolUse hook and the CLI both call guard().
-import { attemptCounts, claimAttempts, quotes, setCount, SET_CAP, URL_CAP } from './ledger.mjs';
+import { attemptCounts, claimAttempts, freshTs, quotes, setCount, SET_CAP, URL_CAP } from './ledger.mjs';
 
 export const LIMITS = { urls: 20, reqs: 20, reqChars: 1000, queries: 50, sameQuestions: SET_CAP, perUrl: URL_CAP };
 
@@ -27,7 +27,7 @@ export function guard(tool, input, dir, { reserve = false, id, shell = true } = 
   const long = reqs.filter((r) => r.length > LIMITS.reqChars);
   if (long.length) return `${long.length} requirement(s) exceed ${LIMITS.reqChars} characters. Rewrite each as one short, checkable question or claim.`;
 
-  const have = quotes(dir);
+  const have = quotes(dir).filter((q) => freshTs(dir, q.ts));
   const covered = new Set(have.map((q) => `${q.url}\n${q.requirement}`));
   if (urls.length && reqs.length && urls.every((u) => reqs.every((r) => covered.has(`${u}\n${r}`)))) {
     return `Every URL and requirement pair in this call already has verbatim quotes in this run's ledger. Reuse them (${findHint(shell)}) or ask a different question of these pages.`;

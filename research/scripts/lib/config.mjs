@@ -8,6 +8,9 @@ import path from 'node:path';
 
 const DEFAULTS = { output_dir: 'research', default_depth: 'standard', compact_tool_output: true };
 
+// A relative folder name inside the project: never absolute, never `.` or `..`, which would widen what agents may write.
+const safeDir = (v, def) => (v && !path.isAbsolute(v) && !v.split(/[\\/]/).some((p) => p === '..' || p === '.' || p === '') ? v : def);
+
 const envOf = (key) => process.env['CLAUDE_PLUGIN_OPTION_' + key.toUpperCase()];
 
 function readOptions(file) {
@@ -51,6 +54,7 @@ export function config() {
   for (const [key, def] of Object.entries(DEFAULTS)) {
     const { value } = lookup(key);
     if (value === undefined) out[key] = def;
+    else if (key === 'output_dir') out[key] = safeDir(String(value), def);
     else if (typeof def === 'boolean') out[key] = typeof value === 'boolean' ? value : !['false', '0', 'no', 'off'].includes(String(value).toLowerCase());
     else out[key] = String(value);
   }

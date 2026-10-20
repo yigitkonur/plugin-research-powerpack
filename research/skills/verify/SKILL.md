@@ -25,7 +25,10 @@ Fact-check the material in the request. Invoke the `research:method` skill with 
    - `contradicted`: a source says the opposite. Quote it.
    - `outdated`: it was true, and a newer source says otherwise. Give the date.
    - `unverified`: no source was found. Say what was searched.
+   - `overstated`: a quote supports a weaker or narrower claim. Say what it supports.
    - `not checkable`: opinion or prediction.
+
+   Auditors also return `unsupported`; report it as `unverified`. In `<slug>` above, use the input file name in kebab-case.
 
    When the input was a file, also write the table to `<file>.verify.md` next to it. Propose a corrected line for each contradicted or outdated claim, with its citation. Do not edit the original unless the user asks.
 
