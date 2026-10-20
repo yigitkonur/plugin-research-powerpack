@@ -1,0 +1,5 @@
+verify run research/corpus-2x2: 0 problem(s)
+  warning: compare/esm-ts.md cites 6 ⚠thin quote(s) (mostly links, they show a link exists and nothing more): E-6c95d4 E-afa23d E-8ab68d E-d71e34 E-14c93c E-b3b168
+  warning: compare/speed.md cites 5 ⚠thin quote(s) (mostly links, they show a link exists and nothing more): E-b744cc E-6c95d4 E-14c93c E-afa23d E-b3b168
+  warning: entities/vitest.md cites 5 ⚠thin quote(s) (mostly links, they show a link exists and nothing more): E-6c95d4 E-afa23d E-df067c E-8e21f9 E-74fbc2
+PASS

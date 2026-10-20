@@ -1,0 +1,140 @@
+[
+ {
+  "id": "E-6c95d4",
+  "url": "https://github.com/vitest-dev/vitest/releases",
+  "quote": "[v5.0.5](/vitest-dev/vitest/releases/tag/v5.0.5) [Latest](/vitest-dev/vitest/releases/latest)",
+  "thin": true
+ },
+ {
+  "id": "E-14c93c",
+  "url": "https://github.com/avajs/ava/releases",
+  "quote": "[v8.1.0](/avajs/ava/releases/tag/v8.1.0) [Latest](/avajs/ava/releases/latest)",
+  "thin": true
+ },
+ {
+  "id": "E-b3b168",
+  "url": "https://github.com/avajs/ava/releases",
+  "quote": "![@ava-launchpad](https://avatars.githubusercontent.com/in/2968778?s=40&v=4) [ava-launchpad](/apps/ava-launchpad) released this 18 Oct 19:24",
+  "thin": true
+ },
+ {
+  "id": "E-1a5bc4",
+  "url": "https://modelcontextprotocol.io/specification/2025-03-26/changelog",
+  "quote": "Replaced the previous HTTP+SSE transport with a more flexible **[Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http)** (PR [#206](https://github.com/modelcontextprotocol/specification/pull/206))",
+  "thin": false
+ },
+ {
+  "id": "E-aabfbf",
+  "url": "https://modelcontextprotocol.io/specification/2025-06-18/basic/transports",
+  "quote": "1.  Servers **MUST** validate the `Origin` header on all incoming connections to prevent DNS rebinding attacks",
+  "thin": false
+ },
+ {
+  "id": "E-172994",
+  "url": "https://nodejs.org/api/test.html",
+  "quote": "### Collecting code coverage[#](#collecting-code-coverage)\n\nStability: 1 - Experimental\n\nWhen Node.js is started with the [`--experimental-test-coverage`](https://nodejs.org/api/cli.html#--experimental-test-coverage) command-line flag, code coverage is collected and statistics are reported once all tests have completed.",
+  "thin": false
+ },
+ {
+  "id": "E-22b6e7",
+  "url": "https://www.npmjs.com/package/%40agendajs/postgres-backend",
+  "quote": "MIT",
+  "thin": false
+ },
+ {
+  "id": "E-b5dc56",
+  "url": "https://jestjs.io/docs/ecmascript-modules",
+  "quote": "Version: 30.5",
+  "thin": false
+ },
+ {
+  "id": "E-8422fa",
+  "url": "https://github.com/temporalio/temporal",
+  "quote": "## License\n\n[MIT License](https://github.com/temporalio/temporal/blob/main/LICENSE)",
+  "thin": true
+ },
+ {
+  "id": "E-07fb62",
+  "url": "https://github.com/agenda/agenda/releases",
+  "quote": "## @agendajs/postgres-backend@3.0.6\n\n[@agendajs/postgres-backend@3.0.6](/agenda/agenda/releases/tag/%40agendajs%2Fpostgres-backend%403.0.6)",
+  "thin": true
+ },
+ {
+  "id": "E-afa23d",
+  "url": "https://github.com/vitest-dev/vitest/releases",
+  "quote": "![@github-actions](https://avatars.githubusercontent.com/in/15368?s=40&v=4) [github-actions](/apps/github-actions) released this 15 Oct 14:22",
+  "thin": true
+ },
+ {
+  "id": "E-48a688",
+  "url": "https://github.com/avajs/ava/releases",
+  "quote": "![@ava-launchpad](https://avatars.githubusercontent.com/in/2968778?s=40&v=4) [ava-launchpad](/apps/ava-launchpad) released this 17 May 19:34",
+  "thin": true
+ },
+ {
+  "id": "E-a15dfa",
+  "url": "https://github.com/mochajs/mocha/releases",
+  "quote": "add --import=tsx integration test ([#6356](https://github.com/mochajs/mocha/issues/6356)) ([3382fdd](https://github.com/mochajs/mocha/commit/3382fdd29e920deb625e279d3bf83b6bf0bbe405))",
+  "thin": true
+ },
+ {
+  "id": "E-3ee6db",
+  "url": "https://github.com/graphile/worker/releases",
+  "quote": "## v0.18.0\n\n[v0.18.0](/graphile/worker/releases/tag/v0.18.0) [Latest](/graphile/worker/releases/latest)",
+  "thin": true
+ },
+ {
+  "id": "E-870cea",
+  "url": "https://github.com/mochajs/mocha/releases",
+  "quote": "convert lib/runner.js to ESM ([#6260](https://github.com/mochajs/mocha/issues/6260))",
+  "thin": true
+ },
+ {
+  "id": "E-c87324",
+  "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http",
+  "quote": "Streamable HTTP was introduced in protocol version 2025-03-26 as a replacement for the [HTTP+SSE transport](/specification/2024-11-05/basic/transports#http-with-sse) from protocol version 2024-11-05.",
+  "thin": false
+ },
+ {
+  "id": "E-229122",
+  "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http",
+  "quote": "The [HTTP+SSE transport](/specification/2024-11-05/basic/transports#http-with-sse) from protocol version 2024-11-05 has been deprecated since protocol version `2025-03-26` and is classified as Deprecated under the [feature lifecycle policy](/community/feature-lifecycle#deprecating-a-feature) ([SEP-2596](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2596)). New implementations **SHOULD NOT** adopt it; existing implementations **SHOULD** migrate to [Streamable HTTP](/specification/2026-07-28/basic/transports/streamable-http). It is eligible for removal in a future revision; see the [deprecated features registry](/specification/2026-07-28/deprecated).",
+  "thin": false
+ },
+ {
+  "id": "E-b336ae",
+  "url": "https://github.com/agenda/agenda",
+  "quote": "Backend\n\nredis\n\nredis\n\nredis\n\npostgres\n\nmongo, postgres, redis\n\nStatus\n\nActive\n\nMaintenance\n\nStale\n\nActive\n\nActive",
+  "thin": false
+ },
+ {
+  "id": "E-ddaa5b",
+  "url": "https://jestjs.io/docs/ecmascript-modules",
+  "quote": "Execute `node` with `--experimental-vm-modules`, e.g. `node --experimental-vm-modules node_modules/jest/bin/jest.js` or `NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" npx jest` etc.",
+  "thin": false
+ },
+ {
+  "id": "E-70fe7b",
+  "url": "https://nodejs.org/api/test.html",
+  "quote": "When running tests with `--test-isolation=process` (the default), each test file runs in a separate child process and is assigned a worker ID from 1 to N, where N is the number of concurrent workers. A worker ID is never shared by two test files running at the same time. Once a test file finishes, its worker ID is reused by the next test file that starts. When running with `--test-isolation=none`, all tests run in the same process and the worker ID is always 1.",
+  "thin": false
+ },
+ {
+  "id": "E-5409a8",
+  "url": "https://mochajs.org/blog/mocha-12-rc-1/",
+  "quote": "[Remove `util.inherits` / convert to classes (#5025)](https://github.com/mochajs/mocha/issues/5025): Through Mocha 11, reporters inherited behavior through `util.inherits`. This was deprecated a long time ago. Reporters now inherit through canonical `class` syntax.",
+  "thin": false
+ },
+ {
+  "id": "E-bc8748",
+  "url": "https://docs.temporal.io/develop/typescript/workflows/basics",
+  "quote": "To make the Workflow runtime deterministic, functions like `Math.random()`, `Date`, and `setTimeout()` are replaced by deterministic versions.",
+  "thin": false
+ },
+ {
+  "id": "E-fb191a",
+  "url": "https://github.com/jestjs/jest/releases",
+  "quote": "-   `[babel-jest]` Support collecting coverage from `.mts`, `.cts` (and other) files ([#15994](https://github.com/jestjs/jest/pull/15994))",
+  "thin": false
+ }
+]

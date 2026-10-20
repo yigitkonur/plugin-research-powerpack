@@ -1,0 +1,310 @@
+[
+ {
+  "line": "- pg-boss is \"maintained by one person\" [E-c493ab] (my reading: a bus factor of one), though its release cadence is active (12.37.1 on 08 Oct, 12.38.0 on 13 Oct) [E-d52adf].",
+  "quotes": {
+   "E-c493ab": {
+    "quote": "It is maintained by one person, and sponsorship is what pays for the maintenance, security response, and support behind it.",
+    "url": "https://github.com/timgit/pg-boss",
+    "title": null
+   },
+   "E-d52adf": {
+    "quote": "## 12.37.1\n\n[12.37.1](/timgit/pg-boss/releases/tag/12.37.1)\n\nCompare\n\n# Choose a tag to compare\n\nFilter\n\n[View all tags](/timgit/pg-boss/tags)\n\n![@timgit](https://avatars.githubusercontent.com/u/656974?s=40&v=4) [timgit](/timgit) released this 08 Oct 15:55",
+    "url": "https://github.com/timgit/pg-boss/releases",
+    "title": "Repository navigation"
+   }
+  },
+  "mismatch": [
+   "12.38.0"
+  ]
+ },
+ {
+  "line": "- Release years for pg-boss 12.38.0, agenda 6.2.6 and BullMQ v6 (\"end of July\" [E-57da41]).",
+  "quotes": {
+   "E-57da41": {
+    "quote": "BullMQ v6 was released at the end of July. Its main addition is a PostgreSQL backend, and we waited to announce it until that backend had a few releases and fixes behind it.",
+    "url": "https://bullmq.io/news/260927/bullmq-v6-postgresql/",
+    "title": "BullMQ v6: PostgreSQL support"
+   }
+  },
+  "mismatch": [
+   "12.38.0",
+   "6.2.6"
+  ]
+ },
+ {
+  "line": "- Vitest is in active maintenance: v5.0.0 on 03 Sep and patch releases every 3 to 17 days or so after it [E-775b78] [E-913375] [E-c9eaa8] [E-9dde46]. The GitHub release pages show day and month only, so the year is inference.",
+  "quotes": {
+   "E-775b78": {
+    "quote": "## v5.0.0\n\n[v5.0.0](/vitest-dev/vitest/releases/tag/v5.0.0)\n\nCompare\n\n# Choose a tag to compare\n\nFilter\n\n[View all tags](/vitest-dev/vitest/tags)\n\n![@github-actions](https://avatars.githubusercontent.com/in/15368?s=40&v=4) [github-actions](/apps/github-actions) released this 03 Sep 12:19",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   },
+   "E-913375": {
+    "quote": "## v5.0.1\n\n[v5.0.1](/vitest-dev/vitest/releases/tag/v5.0.1)\n\nCompare\n\n# Choose a tag to compare\n\nFilter\n\n[View all tags](/vitest-dev/vitest/tags)\n\n![@github-actions](https://avatars.githubusercontent.com/in/15368?s=40&v=4) [github-actions](/apps/github-actions) released this 15 Sep 08:43",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   },
+   "E-c9eaa8": {
+    "quote": "## v5.0.3\n\n[v5.0.3](/vitest-dev/vitest/releases/tag/v5.0.3)\n\nCompare\n\n# Choose a tag to compare\n\nFilter\n\n[View all tags](/vitest-dev/vitest/tags)\n\n![@github-actions](https://avatars.githubusercontent.com/in/15368?s=40&v=4) [github-actions](/apps/github-actions) released this 30 Sep 11:25",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   },
+   "E-9dde46": {
+    "quote": "![@github-actions](https://avatars.githubusercontent.com/in/15368?s=40&v=4) [github-actions](/apps/github-actions) released this 12 Oct 09:37",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   }
+  },
+  "mismatch": [
+   "17"
+  ]
+ },
+ {
+  "line": "1. If you can accept a modern Node floor (22.12+) and want the best-evidenced active development: Vitest (major in September, weekly-pace patches [E-775b78] [E-a8cd97]) and Mocha (dated releases every 1-2 weeks [E-a013ed]) are tied. The flipping variable is year verification for Vitest. If its dates turn out to be a year earlier than assumed (unverified), Mocha leads.",
+  "quotes": {
+   "E-775b78": {
+    "quote": "## v5.0.0\n\n[v5.0.0](/vitest-dev/vitest/releases/tag/v5.0.0)\n\nCompare\n\n# Choose a tag to compare\n\nFilter\n\n[View all tags](/vitest-dev/vitest/tags)\n\n![@github-actions](https://avatars.githubusercontent.com/in/15368?s=40&v=4) [github-actions](/apps/github-actions) released this 03 Sep 12:19",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   },
+   "E-a8cd97": {
+    "quote": "![@github-actions](https://avatars.githubusercontent.com/in/15368?s=40&v=4) [github-actions](/apps/github-actions) released this 19 Oct 16:42",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   },
+   "E-a013ed": {
+    "quote": "## [12.0.3](https://github.com/mochajs/mocha/compare/v12.0.2...v12.0.3) (2026-10-01)",
+    "url": "https://github.com/mochajs/mocha/releases",
+    "title": "Repository navigation"
+   }
+  },
+  "mismatch": [
+   "22.12"
+  ]
+ },
+ {
+  "line": "- The docs are versioned with Node and track v26.12.0, with recent additions such as tags in v26.2.0 [E-9d960a], randomization in v26.1.0 [E-a08c85] and `test:log` in v26.6.0 [E-b8f1bb]. Node 26 is Current, and 24 and 22 are LTS [E-7d6290, E-bc0eb8, E-32dd82].",
+  "quotes": {
+   "E-9d960a": {
+    "quote": "Added in: v26.2.0",
+    "url": "https://nodejs.org/api/test.html",
+    "title": "Subtests[#](#subtests)"
+   },
+   "E-a08c85": {
+    "quote": "#### Randomizing tests execution order[#](#randomizing-tests-execution-order)\n\nAdded in: v26.1.0",
+    "url": "https://nodejs.org/api/test.html",
+    "title": "Subtests[#](#subtests)"
+   },
+   "E-b8f1bb": {
+    "quote": "#### Event: `'test:log'`[#](#event-testlog)\n\nAdded in: v26.6.0",
+    "url": "https://nodejs.org/api/test.html",
+    "title": "Subtests[#](#subtests)"
+   },
+   "E-7d6290": {
+    "quote": "[v26](/en/download/archive/v26.12.0)\n\n\\-\n\nMay 05, 2026\n\nOct 14, 2026\n\nCurrent",
+    "url": "https://nodejs.org/en/about/previous-releases",
+    "title": "[Node.js Releases](#nodejs-releases)"
+   },
+   "E-bc0eb8": {
+    "quote": "[v24](/en/download/archive/v24.22.0)\n\nKrypton\n\nMay 06, 2025\n\nOct 14, 2026\n\nLTS",
+    "url": "https://nodejs.org/en/about/previous-releases",
+    "title": "[Node.js Releases](#nodejs-releases)"
+   },
+   "E-32dd82": {
+    "quote": "[v22](/en/download/archive/v22.23.3)\n\nJod\n\nApr 24, 2024\n\nSep 23, 2026\n\nLTS",
+    "url": "https://nodejs.org/en/about/previous-releases",
+    "title": "[Node.js Releases](#nodejs-releases)"
+   }
+  },
+  "mismatch": [
+   "26.12.0"
+  ]
+ },
+ {
+  "line": "- The docs read do not say whether coverage is still experimental in 26. The v26.12 page still showed the Experimental label [E-172994].",
+  "quotes": {
+   "E-172994": {
+    "quote": "### Collecting code coverage[#](#collecting-code-coverage)\n\nStability: 1 - Experimental\n\nWhen Node.js is started with the [`--experimental-test-coverage`](https://nodejs.org/api/cli.html#--experimental-test-coverage) command-line flag, code coverage is collected and statistics are reported once all tests have completed.",
+    "url": "https://nodejs.org/api/test.html",
+    "title": "Subtests[#](#subtests)"
+   }
+  },
+  "mismatch": [
+   "26.12"
+  ]
+ },
+ {
+  "line": "- Other v5.0.0 breaking changes: \"Inline `expect` package\" [E-8db52e], \"Inline `@vitest/runner` package, do not publish it anymore\" [E-5192f2].",
+  "quotes": {
+   "E-8db52e": {
+    "quote": "Inline `expect` package",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   },
+   "E-5192f2": {
+    "quote": "Inline `@vitest/runner` package, do not publish it anymore",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   }
+  },
+  "mismatch": [
+   "5.0.0"
+  ]
+ },
+ {
+  "line": "- Node 22.12+ or 24 is guaranteed: Vitest leads on observed momentum (v5.0.5, a 5.1 beta) [E-6c95d4] [E-df067c]. Mocha, AVA and node:test remain viable.",
+  "quotes": {
+   "E-6c95d4": {
+    "quote": "[v5.0.5](/vitest-dev/vitest/releases/tag/v5.0.5) [Latest](/vitest-dev/vitest/releases/latest)",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   },
+   "E-df067c": {
+    "quote": "[v5.1.0-beta.1](/vitest-dev/vitest/releases/tag/v5.1.0-beta.1) Pre-release",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   }
+  },
+  "mismatch": [
+   "22.12"
+  ]
+ },
+ {
+  "line": "- **The spec has deprecated HTTP+SSE.** The newest spec revision I read says \"New implementations **SHOULD NOT** adopt it; existing implementations **SHOULD** migrate to Streamable HTTP. It is eligible for removal in a future revision\" [E-8791da].",
+  "quotes": {
+   "E-8791da": {
+    "quote": "**Deprecated**: The [HTTP+SSE transport](/specification/2024-11-05/basic/transports#http-with-sse) from protocol version 2024-11-05 has been deprecated since protocol version `2025-03-26` and is classified as Deprecated under the [feature lifecycle policy](/community/feature-lifecycle#deprecating-a-feature) ([SEP-2596](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2596)). New implementations **SHOULD NOT** adopt it; existing implementations **SHOULD** migrate to [Streamable HTTP](/specification/2026-07-28/basic/transports/streamable-http). It is eligible for removal in a future revision; see the [deprecated features registry](/specification/2026-07-28/deprecated).",
+    "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http",
+    "title": "Streamable HTTP"
+   }
+  },
+  "mismatch": []
+ },
+ {
+  "line": "| pg-boss | Postgres 13+, Node 22.12+ [E-e59c5a] | Yes, `db` option [E-cf97db] | Cron and RRULE [E-d90f6e] | Exponential backoff [E-a31161] | SKIP LOCKED, atomic commits [E-c3486a]; \"at-least-once\" wording not found |",
+  "quotes": {
+   "E-e59c5a": {
+    "quote": "-   Node 22.12 or higher, or Bun\n-   PostgreSQL 13 or higher",
+    "url": "https://github.com/timgit/pg-boss",
+    "title": null
+   },
+   "E-cf97db": {
+    "quote": "Inside a transaction passed as `db`, a queue in the shared job table is checked when that transaction commits: `send()` resolves with an id, and the `COMMIT` fails with a foreign key violation (`23503`).",
+    "url": "https://github.com/timgit/pg-boss/releases",
+    "title": "Repository navigation"
+   },
+   "E-d90f6e": {
+    "quote": "-   Cron and RRULE scheduling, job deferral",
+    "url": "https://github.com/timgit/pg-boss",
+    "title": null
+   },
+   "E-a31161": {
+    "quote": "-   Priority queues, dead letter queues with redrive, automatic retries with exponential backoff",
+    "url": "https://github.com/timgit/pg-boss",
+    "title": null
+   },
+   "E-c3486a": {
+    "quote": "pg-boss relies on Postgres's SKIP LOCKED, a feature built specifically for message queues to resolve record locking challenges inherent with relational databases. Concurrent workers claim jobs without blocking each other, and job processing gets the safety of guaranteed atomic commits.",
+    "url": "https://github.com/timgit/pg-boss",
+    "title": null
+   }
+  },
+  "mismatch": []
+ },
+ {
+  "line": "| Jest | Latest version | v30.5.2, marked Latest [E-a3d53e]. Release date not established. Stamps \"18 Sep\" [E-d1eacd], \"01 Sep\" [E-78bd9b] and \"28 Aug\" [E-4447c4] have no year and are not mapped to versions. Inference, unverified: 2026. |",
+  "quotes": {
+   "E-a3d53e": {
+    "quote": "[v30.5.2](/jestjs/jest/releases/tag/v30.5.2) [Latest](/jestjs/jest/releases/latest)",
+    "url": "https://github.com/jestjs/jest/releases",
+    "title": "Repository navigation"
+   },
+   "E-d1eacd": {
+    "quote": "![@SimenB](https://avatars.githubusercontent.com/u/1404810?s=40&v=4) [SimenB](/SimenB) released this 18 Sep 13:57",
+    "url": "https://github.com/jestjs/jest/releases",
+    "title": "Repository navigation"
+   },
+   "E-78bd9b": {
+    "quote": "![@SimenB](https://avatars.githubusercontent.com/u/1404810?s=40&v=4) [SimenB](/SimenB) released this 01 Sep 07:58",
+    "url": "https://github.com/jestjs/jest/releases",
+    "title": "Repository navigation"
+   },
+   "E-4447c4": {
+    "quote": "![@SimenB](https://avatars.githubusercontent.com/u/1404810?s=40&v=4) [SimenB](/SimenB) released this 28 Aug 08:29",
+    "url": "https://github.com/jestjs/jest/releases",
+    "title": "Repository navigation"
+   }
+  },
+  "mismatch": []
+ },
+ {
+  "line": "- Readme: \"_Note that AVA's documentation assumes you're using ES modules._\" [E-8fbf35]",
+  "quotes": {
+   "E-8fbf35": {
+    "quote": "_Note that AVA's documentation assumes you're using ES modules._",
+    "url": "https://github.com/avajs/ava/blob/main/readme.md",
+    "title": "Repository navigation"
+   }
+  },
+  "mismatch": []
+ },
+ {
+  "line": "- Latest stable shown as \"Latest\" on the GitHub releases page is v5.0.5, \"released this 15 Oct 14:22\" [E-3e1ded]. The year is not in the quote; 2026 is inference (unverified).",
+  "quotes": {
+   "E-3e1ded": {
+    "quote": "## v5.0.5\n\n[v5.0.5](/vitest-dev/vitest/releases/tag/v5.0.5) [Latest](/vitest-dev/vitest/releases/latest)\n\n[Latest](/vitest-dev/vitest/releases/latest)\n\nCompare\n\n# Choose a tag to compare\n\nFilter\n\n[View all tags](/vitest-dev/vitest/tags)\n\n![@github-actions](https://avatars.githubusercontent.com/in/15368?s=40&v=4) [github-actions](/apps/github-actions) released this 15 Oct 14:22",
+    "url": "https://github.com/vitest-dev/vitest/releases",
+    "title": "Repository navigation"
+   }
+  },
+  "mismatch": []
+ },
+ {
+  "line": "- Full text of E-dc3f03 and E-7e1841 is truncated in the output (fetch with `rpp ledger get`).",
+  "quotes": {
+   "E-dc3f03": {
+    "quote": "**Clients** wanting to support older servers should:\n\n1.  Accept an MCP server URL from the user, which may point to either a server using the old transport or the new transport.\n2.  Attempt to POST a request to the server URL, with an `Accept` header as defined above:\n    -   If it succeeds, the client can assume this is a server supporting the new Streamable HTTP transport.\n    -   If it fails with HTTP status code `400 Bad Request`, `404 Not Found`, or `405 Method Not Allowed` **and** the response body is not a recognized modern JSON-RPC error (a modern server returns one for unsupported version, unknown method, or header-validation failure):\n        -   Issue a GET request to the server URL, expecting that this will open an SSE stream and return an `endpoint` event as the first event.\n        -   When the `endpoint` event arrives, the client can assume this is a server running the old HTTP+SSE transport, and should use that transport for all subsequent communication.",
+    "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http",
+    "title": "Streamable HTTP"
+   },
+   "E-7e1841": {
+    "quote": "**Clients** wanting to support older servers should:\n\n1.  Accept an MCP server URL from the user, which may point to either a server using the old transport or the new transport.\n2.  Attempt to POST an `InitializeRequest` to the server URL, with an `Accept` header as defined above:\n    -   If it succeeds, the client can assume this is a server supporting the new Streamable HTTP transport.\n    -   If it fails with the following HTTP status codes “400 Bad Request”, “404 Not Found” or “405 Method Not Allowed”:\n        -   Issue a GET request to the server URL, expecting that this will open an SSE stream and return an `endpoint` event as the first event.\n        -   When the `endpoint` event arrives, the client can assume this is a server running the old HTTP+SSE transport, and should use that transport for all subsequent communication.",
+    "url": "https://modelcontextprotocol.io/specification/2025-11-25/basic/transports",
+    "title": "Transports"
+   }
+  },
+  "mismatch": []
+ },
+ {
+  "line": "- Flip variable: whether you need module mocking or coverage gates. Both are experimental [E-306a97] [E-172994] [E-aaa956]. If you do, node:test drops below Jest and Vitest.",
+  "quotes": {
+   "E-306a97": {
+    "quote": "Stability: 1.0 - Early development",
+    "url": "https://nodejs.org/api/test.html",
+    "title": "Subtests[#](#subtests)"
+   },
+   "E-172994": {
+    "quote": "### Collecting code coverage[#](#collecting-code-coverage)\n\nStability: 1 - Experimental\n\nWhen Node.js is started with the [`--experimental-test-coverage`](https://nodejs.org/api/cli.html#--experimental-test-coverage) command-line flag, code coverage is collected and statistics are reported once all tests have completed.",
+    "url": "https://nodejs.org/api/test.html",
+    "title": "Subtests[#](#subtests)"
+   },
+   "E-aaa956": {
+    "quote": "#### `--test-coverage-branches=threshold`[#](#--test-coverage-branchesthreshold)\n\nAdded in: v22.8.0\n\nStability: 1 - Experimental",
+    "url": "https://nodejs.org/api/cli.html",
+    "title": "Command-line API[#](#command-line-api)"
+   }
+  },
+  "mismatch": []
+ },
+ {
+  "line": "- Counter-signal: a user complained about a long gap, with 30.2.0 released at the end of September and a fix merged almost 2 months before without a release [E-9f7608]. The discussion date is unverified (inferred from the 30.2.0 timing).",
+  "quotes": {
+   "E-9f7608": {
+    "quote": "I am working on a problem that might be resolved with the PR [#15842](https://github.com/jestjs/jest/pull/15842) that has been merged almost 2 months ago.  \nThe latest release (`30.2.0`) was published by end of September just a couple of days before the PR was merged.  \nWhen can I expect the next release that would include the changes of [#15842](https://github.com/jestjs/jest/pull/15842) ? I am kind of suprised that there's such a big time gap between the releases.",
+    "url": "https://github.com/jestjs/jest/discussions/15912",
+    "title": "Repository navigation"
+   }
+  },
+  "mismatch": []
+ }
+]
