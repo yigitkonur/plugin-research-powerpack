@@ -72,6 +72,8 @@ export function verifyDoc(text, known, byId = new Map()) {
     const heading = /^#{1,6}\s+(.*)/.exec(ln);
     if (heading) { exemptSection = EXEMPT_SECTION.test(heading[1]); return; }
     if (/^\s*>/.test(ln) || /^[\s|:-]+$/.test(ln) || !ln.trim()) return;
+    // A metadata line such as "Date: 2026-10-21" dates the document itself; it is not a claim.
+    if (/^\s*[-*]?\s*\**(?:date|read|updated|retrieved|as of)\s*:?\**\s*:?\s*\**\s*\d{4}-\d{2}-\d{2}\s*\**\s*$/i.test(ln)) return;
     for (const id of ln.match(ID_RE) || []) {
       cited.add(id);
       if (!known.has(id) && !unknown.has(id)) unknown.set(id, i + 1);

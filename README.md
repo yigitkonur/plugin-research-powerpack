@@ -35,6 +35,8 @@ or in one line:
 claude plugin install research --marketplace yigitkonur/plugin-research-powerpack
 ```
 
+the installer says 3 userConfig options aren't set yet. that's expected, they all have defaults (`/plugin configure research` if you want to change them).
+
 restart claude code (or run `/reload-plugins`), then run `/research:doctor` to check the server is reachable. that's it, no api key.
 
 needs claude code 2.1.271 or newer and node 20+ on your path (the hooks and the `rpp` cli are zero-dependency node scripts).
