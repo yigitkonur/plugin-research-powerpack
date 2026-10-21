@@ -11,10 +11,10 @@ description: |
   </example>
 
   <example>
-  Context: The user wants a README fact-checked.
-  user: "Fact-check the claims in this README."
-  assistant: "I'll send auditors to test each extracted claim against primary sources."
-  <commentary>Claims from an outside document, verdicts with evidence IDs.</commentary>
+  Context: The verify skill has extracted more than five claims from a README.
+  user: "/research:verify README.md"
+  assistant: "The verify skill groups the claims and dispatches auditors in parallel, one output file each."
+  <commentary>Claims from an outside document, verdicts with evidence IDs. The verify skill owns claim extraction and the report.</commentary>
   </example>
 model: sonnet
 effort: high

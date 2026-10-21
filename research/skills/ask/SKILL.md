@@ -1,6 +1,6 @@
 ---
 name: ask
-description: Answer one research question from web sources with verbatim, cited evidence using the Research Powerpack. Use for "look up whether X supports Y", "what do the docs say", "is it true that", "latest version of", "read these URLs and tell me", or an error message to diagnose from the web. Not for comparing three or more options, surveys or reports; use the deep skill for those.
+description: Answer one research question from web sources with verbatim, cited evidence using the Research Powerpack. Use when the answer needs the web, for example "look up whether X supports Y", "what do the docs say about", "read these URLs and tell me", what changed in a release, or an error message to diagnose. Not for what a package manager or the local code already answers, and not for fact-checking a document the user hands over (use verify). If the request turns out bigger, such as comparing three or more options, still start here: this skill offers the deep skill.
 argument-hint: "<question or URLs> [--save] [--background]"
 allowed-tools: mcp__plugin_research_powerpack__*, mcp__mcp-researchpowerpack__*, Read, Grep, Glob, Write, Agent, AskUserQuestion, Skill, Bash(rpp *)
 ---

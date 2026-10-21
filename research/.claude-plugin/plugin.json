@@ -1,11 +1,24 @@
 {
   "name": "research",
+  "displayName": "Research Powerpack",
   "version": "0.2.0",
   "description": "Evidence-grounded web research: bundles the Research Powerpack MCP with ask, deep, verify and doctor skills, scout, analyst and auditor agents, and hooks that keep a quote ledger outside the context window.",
   "author": {
-    "name": "mac"
+    "name": "yigitkonur",
+    "url": "https://github.com/yigitkonur"
   },
-  "keywords": ["research", "evidence", "citations", "mcp", "fact-check"],
+  "homepage": "https://github.com/yigitkonur/plugin-research-powerpack",
+  "repository": "https://github.com/yigitkonur/plugin-research-powerpack",
+  "license": "MIT",
+  "keywords": [
+    "research",
+    "evidence",
+    "citations",
+    "fact-check",
+    "mcp",
+    "web-search",
+    "deep-research"
+  ],
   "userConfig": {
     "output_dir": {
       "type": "string",
@@ -17,7 +30,11 @@
       "type": "string",
       "title": "Default depth",
       "description": "Depth used by /research:deep when the request does not say.",
-      "options": ["fast", "standard", "exhaustive"],
+      "options": [
+        "fast",
+        "standard",
+        "exhaustive"
+      ],
       "default": "standard"
     },
     "compact_tool_output": {

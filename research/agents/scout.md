@@ -4,10 +4,10 @@ description: |
   Use this agent to research one bounded question, lens or entity on the web with verbatim, cited evidence, and report back without filling the main conversation with search output. It cannot ask the user questions; it returns open decisions instead.
 
   <example>
-  Context: The user is coding and wants a lookup done while they keep working.
-  user: "While I keep going, find out whether library X v4 dropped Node 18."
-  assistant: "I'll dispatch the scout agent to research that in the background."
-  <commentary>A bounded lookup that needs web evidence and should not block the main thread.</commentary>
+  Context: The ask skill runs with --background while the user keeps coding.
+  user: "/research:ask --background did library X v4 drop Node 18?"
+  assistant: "The ask skill dispatches the scout in the background with a budget and the note path."
+  <commentary>A bounded lookup that needs web evidence and should not block the main thread. The ask skill owns the budget and the note format.</commentary>
   </example>
 
   <example>
@@ -18,9 +18,9 @@ description: |
   </example>
 
   <example>
-  Context: The user wants one entity profiled from primary sources.
-  user: "Profile Tool Y's pricing and limits for the comparison."
-  assistant: "I'll send a scout to read Tool Y's pricing and limits pages and write its entity note."
+  Context: A corpus run has confirmed its entities and needs one note per entity.
+  user: "Continue the comparison run."
+  assistant: "The deep skill sends one scout per entity, each writing entities/<slug>.md from the entity template."
   <commentary>One entity, one file, quotes with dates.</commentary>
   </example>
 model: sonnet

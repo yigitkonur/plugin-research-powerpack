@@ -1,14 +1,31 @@
 {
-  "name": "plugin-devs",
-  "description": "Local plugins under development",
+  "name": "plugin-research-powerpack",
   "owner": {
-    "name": "mac"
+    "name": "yigitkonur",
+    "url": "https://github.com/yigitkonur"
+  },
+  "metadata": {
+    "description": "Evidence-grounded web research for Claude Code on the Research Powerpack MCP: cited answers, deep reports and comparison corpora on disk, fact-checks, and hooks that keep every claim tied to a verbatim quote.",
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "research",
+      "description": "Cited answers, deep research runs that write reports or comparison corpora to disk, and fact-checks, on the bundled Research Powerpack MCP. Hooks keep a quote ledger outside the context window and block uncited or mis-cited numbers.",
+      "version": "0.2.0",
+      "author": {
+        "name": "yigitkonur",
+        "url": "https://github.com/yigitkonur"
+      },
       "source": "./research",
-      "description": "Evidence-grounded web research on the Research Powerpack MCP: ask, deep, verify, doctor, plus agents and ledger hooks."
+      "category": "productivity",
+      "keywords": [
+        "research",
+        "evidence",
+        "citations",
+        "fact-check",
+        "mcp"
+      ]
     }
   ]
 }

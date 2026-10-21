@@ -185,8 +185,25 @@ export function claimAttempts(dir, urls, reqs, id) {
   return { sameSet, ceiling };
 }
 
+// The per-project cache for quick questions keeps raw calls for 30 days; a run keeps everything.
+const PRUNE_AFTER_MS = 30 * 24 * 3600 * 1000;
+export function pruneQuick(dir) {
+  if (isRunLedger(dir)) return 0;
+  let n = 0;
+  for (const sub of ['calls', 'attempts']) {
+    let names = [];
+    try { names = fs.readdirSync(path.join(dir, sub)); } catch { continue; }
+    for (const f of names) {
+      const p = path.join(dir, sub, f);
+      try { if (Date.now() - fs.statSync(p).mtimeMs > PRUNE_AFTER_MS) { fs.rmSync(p, { force: true }); n++; } } catch { /* raced with another prune */ }
+    }
+  }
+  return n;
+}
+
 // Persist a call and index its quotes. Returns the IDs that were new to the ledger.
 export function recordCall(dir, tool, input, structured, meta = {}) {
+  try { pruneQuick(dir); } catch { /* never block recording */ }
   const ts = new Date().toISOString();
   const tag = String(meta.id || crypto.randomBytes(4).toString('hex')).slice(-8);
   const callFile = `${ts.replace(/[:.]/g, '-')}-${tool}-${tag}.json`;

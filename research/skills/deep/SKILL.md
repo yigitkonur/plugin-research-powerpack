@@ -18,7 +18,7 @@ Invoke the `research:method` skill with the Skill tool now unless its text is al
 
 If the argument is a run path, or the list above shows an unfinished run on the same topic, read that run's `state.json` and `charter.md`. Tell the user the phase in one line. Continue from that phase. List `notes/` first so that finished work is not repeated. Otherwise go to step 1.
 
-Flags: `--report`, `--brief` and `--corpus` set the type. `--depth` sets the depth. `--no-ask` skips step 2.
+Flags: `--report`, `--brief` and `--corpus` set the type. `--depth` sets the depth; without it, the depth is the value printed by `rpp config default_depth`. `--no-ask` skips step 2.
 
 ## 1. Frame
 

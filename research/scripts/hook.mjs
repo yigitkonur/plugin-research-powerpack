@@ -75,7 +75,11 @@ const handlers = {
     if (L.config.config().compact_tool_output) {
       emit({ hookSpecificOutput: { hookEventName: 'PostToolUse', updatedToolOutput: text } });
     } else if (added.length) {
-      emit({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: `Ledger indexed ${added.length} new quote(s): ${added.join(' ')}. Cite them as [E-xxxxxx].` } });
+      // The raw output stays; give each new ID with the start of its quote so the model can tell which is which.
+      const byId = new Map(L.ledger.quotes(dir).map((q) => [q.id, q]));
+      const lines = added.slice(0, 60).map((id) => `${id}: "${L.runs.clean(byId.get(id)?.quote, 90)}"`);
+      const more = added.length > 60 ? `\n(${added.length - 60} more; look them up with ${hasShell(i) ? 'rpp ledger find "<text>"' : "a Grep of the run's evidence/quotes.jsonl"})` : '';
+      emit({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: `Ledger indexed ${added.length} new quote(s). Cite them as [E-xxxxxx]:\n${lines.join('\n')}${more}` } });
     }
   },
 
