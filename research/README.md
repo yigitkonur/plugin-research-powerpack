@@ -56,6 +56,7 @@ set them with `/plugin configure research`. outside claude code, use env vars na
 - the server's quote check certifies the quotation, not your reading of it. that's what the auditor is for.
 - scout budgets are instructions, not hard limits. `rpp runs show` is where an overrun shows up.
 - headless runs (`claude -p`) can't answer questions. pass `--no-ask` and the run takes the recommended scope.
+- in `claude -p`, claude code stops background agents that are still running 10 minutes after the main thread's last turn. we saw this cut a `deep` run mid-wave once, when three scouts' model requests stalled. run `deep` interactively for big jobs, or set `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`. a stopped run resumes with `/research:deep <run folder>`.
 - the checks read a few english words (`unverified`, `inferred`, `computed`, `no public data`, `Verdict:`, `Axes:`), so those stay english whatever language the report is in.
 
 ## replay checks
