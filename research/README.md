@@ -8,6 +8,13 @@ install (claude code 2.1.275+):
 claude plugin install research --marketplace yigitkonur/plugin-research-powerpack
 ```
 
+install in codex:
+
+```shell
+codex plugin marketplace add yigitkonur/plugin-research-powerpack
+codex plugin add research@plugin-research-powerpack
+```
+
 ## how it works
 
 - **evidence rules.** search results are leads. only a quote returned by `extract-evidence` is evidence. a source the server didn't finish reading is never reported as "not found".
@@ -55,6 +62,16 @@ set them with `/plugin configure research`. outside claude code, use env vars na
 - **tools missing in a fresh session.** the plugin's mcp server connects a moment after start. the main thread waits for it; a scout that starts too early says `Research tools unavailable` and gets re-run.
 - **you already added the same server yourself** (say `claude mcp add ... mcp-researchpowerpack`). claude code then skips the plugin's copy because the url matches. `/research:doctor` names the entry; `claude mcp remove <name> -s user` lets the plugin's copy take over. the hooks cover both tool names in the meantime.
 - **`rpp: command not found`.** restart claude code after enabling the plugin so `bin/` lands on the path.
+
+## codex
+
+the skills and the hooks run in codex too, through `.codex-plugin/plugin.json`, `.codex-mcp.json` and `hooks/codex-hooks.json`. the guard (url limits), the quote ledger and the write-time citation check all work there. what doesn't carry over:
+
+- no slash commands and no `research:scout|analyst|auditor` agent types. the skills tell codex to spawn plain agents from the agent files, or to do the step itself.
+- no compact tool output: codex rejects a hook rewriting an mcp result, so the hook adds the list of new quote ids as context and the raw result stays.
+- the plugin's `bin/` isn't on codex's path. the hooks print `node <plugin>/bin/rpp ...` when they name the cli.
+- the server url is fixed in `.codex-mcp.json` (no `RESEARCH_MCP_URL`), and plugin settings (`output_dir` and the others) have no codex equivalent: set `CLAUDE_PLUGIN_OPTION_OUTPUT_DIR` and friends in the environment if you need them.
+- codex names the tools `mcp__research_powerpack__web_search` (underscore), and the `writeguard` fence for subagents is claude-only.
 
 ## known limits
 

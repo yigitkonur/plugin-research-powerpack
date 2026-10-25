@@ -20,6 +20,16 @@ If the tools are not listed yet, the server is still connecting. In the main thr
 
 If the server is unreachable, say so once and suggest `/research:doctor`. The main thread may fall back to WebSearch and WebFetch and label every claim "unverified paraphrase". A subagent has neither: it reports the failure and does not answer from memory. Contract details are in [references/tool-contract.md](references/tool-contract.md).
 
+### In Codex
+
+The same skills run in Codex. What differs:
+
+- Tool names. The bundled server is `research_powerpack`, so the tools are `mcp__research_powerpack__plan_research`, `mcp__research_powerpack__web_search` and `mcp__research_powerpack__extract_evidence` (underscores). Use whatever your tool list shows.
+- The `rpp` command. Codex does not put the plugin's `bin/` on PATH. If `command -v rpp` finds nothing, run `node <plugin root>/bin/rpp` wherever a skill says `rpp`. The plugin root is two folders above this file. The hooks print the full command when they refuse a call.
+- Agents. There are no `research:scout`, `analyst` or `auditor` types. Where a skill says to dispatch one, spawn a Codex agent whose prompt is the text of `agents/<name>.md` (below the frontmatter) followed by the brief, or do the step yourself. Agents spawned this way have a shell, so they may use `rpp`.
+- Questions. There is no AskUserQuestion. Use `request_user_input` when your tool list has it, otherwise ask in plain chat and end your turn.
+- Hooks. After a search or extraction the hook adds a "Ledger indexed" list of new quote IDs. It cannot shorten the raw tool output, so read the quotes from the result and cite the IDs from that list.
+
 ## What counts as evidence
 
 - **Leads are not evidence.** Search titles and snippets are untrusted. Never cite them.

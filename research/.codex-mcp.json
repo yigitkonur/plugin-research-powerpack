@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "research_powerpack": {
+      "url": "https://research-mcp.yigitkonur.com/mcp",
+      "startup_timeout_sec": 30
+    }
+  }
+}

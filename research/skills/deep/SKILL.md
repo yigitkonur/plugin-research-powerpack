@@ -10,9 +10,11 @@ Request: $ARGUMENTS
 Unfinished runs in this project:
 !`rpp runs list --brief 2>&1 || true`
 
+(In Codex nothing is filled in above: the request is the user's message, and you run `rpp runs list --brief` yourself.)
+
 You are the orchestrator. You scope the work, dispatch scouts, gate their output, write the conclusions yourself and audit the result. The filesystem is the channel between agents. Scouts write files, you read the files, and you never paste raw evidence into the conversation.
 
-Invoke the `research:method` skill with the Skill tool now unless its text is already in this conversation.
+Invoke the `research:method` skill with the Skill tool now (in Codex, read the method skill's SKILL.md) unless its text is already in this conversation.
 
 ## 0. Resume or start
 

@@ -4,7 +4,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const TOOL_RE = /^mcp__(?:plugin_research_powerpack|mcp-researchpowerpack)__(plan-research|web-search|extract-evidence)$/;
+const TOOL_RE = /^mcp__(?:plugin_research_powerpack|mcp-researchpowerpack|research_powerpack|research-mcp)__(plan[-_]research|web[-_]search|extract[-_]evidence)$/;
+// Codex reports the tools as web_search and extract_evidence; the plugin's own names use hyphens.
+const toolOf = (i) => { const m = TOOL_RE.exec(i.tool_name || ''); return m && [m[0], m[1].replace('_', '-')]; };
+// Codex runs these hooks from hooks/codex-hooks.json with --host=codex.
+const CODEX = process.argv.includes('--host=codex');
+// Codex does not put the plugin's bin/ on PATH, so hints that name the rpp command spell out how to run it there.
+const RPP = CODEX ? `node "${path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'bin', 'rpp')}"` : 'rpp';
 const RESEARCH_AGENT_RE = /(?:^|:)(?:scout|analyst|auditor)$/;
 const AGENT_WRITE = /^(?:[a-z0-9][a-z0-9-]{0,80}\/)?(?:notes|entities|compare|verify)\/[^/]+\.md$/;
 
@@ -12,8 +18,22 @@ const readInput = () => {
   try { return JSON.parse(fs.readFileSync(0, 'utf8')); } catch { return null; }
 };
 const emit = (o) => process.stdout.write(JSON.stringify(o));
-// Inside a subagent every tool event carries agent_type. The research agents have no shell.
-const hasShell = (i) => !i.agent_type;
+// Inside a Claude Code subagent every tool event carries agent_type. The research agents have no shell.
+const hasShell = (i) => CODEX || !i.agent_type;
+
+// Files a write touched. Claude Code sends file_path; Codex writes through apply_patch, whose patch text
+// names them on "*** Add File: <path>" and "*** Update File: <path>" lines in some string field of the input.
+function writtenFiles(i) {
+  const input = i.tool_input;
+  if (input && typeof input === 'object' && typeof input.file_path === 'string') return [input.file_path];
+  const files = [];
+  const walk = (v) => {
+    if (typeof v === 'string') for (const m of v.matchAll(/^\*\*\* (?:Add|Update) File: (.+)$/gm)) files.push(m[1].trim());
+    else if (v && typeof v === 'object') Object.values(v).forEach(walk);
+  };
+  walk(input);
+  return files.map((f) => path.resolve(i.cwd || process.cwd(), f));
+}
 
 // Resolve a path through symlinks even when the file does not exist yet. A dangling symlink is followed to
 // its target, so a link inside the output directory cannot be used to create a file outside it.
@@ -42,13 +62,43 @@ async function load() {
   return { config, budget, doc, ledger, pipeline, runs };
 }
 
+function citeFile(i, L, file, msgs) {
+  if (!file || !file.endsWith('.md')) return;
+  const out = L.ledger.outputRoot(i.cwd);
+  let abs = path.resolve(file);
+  try { abs = fs.realpathSync(abs); } catch { return; }
+  if (!abs.startsWith(out + path.sep)) return;
+  const rel = path.relative(out, abs);
+  if (rel.split(path.sep).includes('evidence')) return;
+  const run = L.runs.runOfPath(abs, i.cwd);
+  const dir = run ? path.join(run, 'evidence') : L.ledger.resolveLedger({ cwd: i.cwd }).dir;
+  const byId = new Map(L.ledger.quotes(dir).map((q) => [q.id, q]));
+  const r = L.doc.verifyDoc(fs.readFileSync(abs, 'utf8'), new Set(byId.keys()), byId);
+  const hint = hasShell(i) ? `${RPP} ledger find "<text>"` : "a Grep of the run's evidence/quotes.jsonl";
+  if (r.unknown.length) {
+    msgs.push(`${rel} cites evidence IDs that are not in the ledger: ${r.unknown.map((u) => `${u.id} (line ${u.line})`).join(', ')}. Cite only IDs shown in tool output or found with ${hint}. Never invent an ID.`);
+  }
+  const exempt = ['charter.md', 'README.md', 'audit.md'].includes(path.basename(abs));
+  if (!exempt && r.uncited.length) {
+    const sample = r.uncited.slice(0, 3).map((u) => `line ${u.line}: "${u.text}"`).join('; ');
+    msgs.push(`${rel} has ${r.uncited.length} sentence(s) with numbers, versions, dates or prices and no citation (${sample}). Add [E-xxxxxx] or mark them unverified.`);
+  }
+  if (!exempt && r.mismatch.length) {
+    const sample = r.mismatch.slice(0, 3).map((m) => `line ${m.line}: ${m.numbers.join(', ')} is not in ${m.ids.join(' ')}`).join('; ');
+    msgs.push(`${rel} cites quotes that do not state the numbers beside them (${sample}). Cite the quote that states each number, or say it is inferred or computed.`);
+  }
+  if (!exempt && r.thin.length) {
+    msgs.push(`${rel} cites page-chrome quotes (mostly links, no statement): ${r.thin.slice(0, 4).map((t) => `${t.id} (line ${t.line})`).join(', ')}. They show a link exists, not what the page says; re-read the source with a sharper requirement.`);
+  }
+}
+
 const handlers = {
   guard(i, L) {
-    const m = TOOL_RE.exec(i.tool_name || '');
+    const m = toolOf(i);
     if (!m) return;
     const { dir } = L.ledger.resolveLedger({ cwd: i.cwd });
     const reason = L.budget.guard(m[1], i.tool_input || {}, dir, { reserve: true, id: i.tool_use_id, shell: hasShell(i) });
-    if (reason) emit({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason } });
+    if (reason) emit({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason.replaceAll('rpp ledger', `${RPP} ledger`) } });
   },
 
   // The research agents read untrusted pages, so they may only write the working files of a run: notes,
@@ -65,20 +115,21 @@ const handlers = {
   },
 
   record(i, L) {
-    const m = TOOL_RE.exec(i.tool_name || '');
+    const m = toolOf(i);
     if (!m) return;
     const structured = L.pipeline.parseStructured(i.tool_response);
     if (!structured) return;
     const { dir } = L.ledger.resolveLedger({ cwd: i.cwd });
     const { added, text } = L.pipeline.ingest(dir, m[1], i.tool_input || {}, structured, { id: i.tool_use_id, agent: i.agent_type || null, agent_id: i.agent_id || null }, { shell: hasShell(i) });
     if (!text) return;
-    if (L.config.config().compact_tool_output) {
+    // Codex rejects an updated MCP tool output from a hook, so there the new IDs go in as context instead.
+    if (!CODEX && L.config.config().compact_tool_output) {
       emit({ hookSpecificOutput: { hookEventName: 'PostToolUse', updatedToolOutput: text } });
     } else if (added.length) {
       // The raw output stays; give each new ID with the start of its quote so the model can tell which is which.
       const byId = new Map(L.ledger.quotes(dir).map((q) => [q.id, q]));
       const lines = added.slice(0, 60).map((id) => `${id}: "${L.runs.clean(byId.get(id)?.quote, 90)}"`);
-      const more = added.length > 60 ? `\n(${added.length - 60} more; look them up with ${hasShell(i) ? 'rpp ledger find "<text>"' : "a Grep of the run's evidence/quotes.jsonl"})` : '';
+      const more = added.length > 60 ? `\n(${added.length - 60} more; look them up with ${hasShell(i) ? `${RPP} ledger find "<text>"` : "a Grep of the run's evidence/quotes.jsonl"})` : '';
       emit({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: `Ledger indexed ${added.length} new quote(s). Cite them as [E-xxxxxx]:\n${lines.join('\n')}${more}` } });
     }
   },
@@ -86,35 +137,8 @@ const handlers = {
   // After Write or Edit of a markdown file under the research output directory:
   // flag unknown evidence IDs and uncited numeric claims while the writer can still fix them.
   cite(i, L) {
-    const file = i.tool_input?.file_path;
-    if (!file || !file.endsWith('.md')) return;
-    const out = L.ledger.outputRoot(i.cwd);
-    let abs = path.resolve(file);
-    try { abs = fs.realpathSync(abs); } catch { return; }
-    if (!abs.startsWith(out + path.sep)) return;
-    const rel = path.relative(out, abs);
-    if (rel.split(path.sep).includes('evidence')) return;
-    const run = L.runs.runOfPath(abs, i.cwd);
-    const dir = run ? path.join(run, 'evidence') : L.ledger.resolveLedger({ cwd: i.cwd }).dir;
-    const byId = new Map(L.ledger.quotes(dir).map((q) => [q.id, q]));
-    const r = L.doc.verifyDoc(fs.readFileSync(abs, 'utf8'), new Set(byId.keys()), byId);
-    const hint = hasShell(i) ? 'rpp ledger find "<text>"' : "a Grep of the run's evidence/quotes.jsonl";
     const msgs = [];
-    if (r.unknown.length) {
-      msgs.push(`${rel} cites evidence IDs that are not in the ledger: ${r.unknown.map((u) => `${u.id} (line ${u.line})`).join(', ')}. Cite only IDs shown in tool output or found with ${hint}. Never invent an ID.`);
-    }
-    const exempt = ['charter.md', 'README.md', 'audit.md'].includes(path.basename(abs));
-    if (!exempt && r.uncited.length) {
-      const sample = r.uncited.slice(0, 3).map((u) => `line ${u.line}: "${u.text}"`).join('; ');
-      msgs.push(`${rel} has ${r.uncited.length} sentence(s) with numbers, versions, dates or prices and no citation (${sample}). Add [E-xxxxxx] or mark them unverified.`);
-    }
-    if (!exempt && r.mismatch.length) {
-      const sample = r.mismatch.slice(0, 3).map((m) => `line ${m.line}: ${m.numbers.join(', ')} is not in ${m.ids.join(' ')}`).join('; ');
-      msgs.push(`${rel} cites quotes that do not state the numbers beside them (${sample}). Cite the quote that states each number, or say it is inferred or computed.`);
-    }
-    if (!exempt && r.thin.length) {
-      msgs.push(`${rel} cites page-chrome quotes (mostly links, no statement): ${r.thin.slice(0, 4).map((t) => `${t.id} (line ${t.line})`).join(', ')}. They show a link exists, not what the page says; re-read the source with a sharper requirement.`);
-    }
+    for (const file of writtenFiles(i)) citeFile(i, L, file, msgs);
     if (msgs.length) emit({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: msgs.join('\n') } });
   },
 

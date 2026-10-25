@@ -1,0 +1,39 @@
+{
+  "name": "research",
+  "version": "0.2.2",
+  "description": "Evidence-grounded web research: bundles the Research Powerpack MCP with ask, deep, verify and doctor skills and hooks that keep a quote ledger outside the context window.",
+  "author": {
+    "name": "yigitkonur",
+    "url": "https://github.com/yigitkonur"
+  },
+  "homepage": "https://github.com/yigitkonur/plugin-research-powerpack",
+  "repository": "https://github.com/yigitkonur/plugin-research-powerpack",
+  "license": "MIT",
+  "keywords": [
+    "research",
+    "evidence",
+    "citations",
+    "fact-check",
+    "mcp",
+    "web-search",
+    "deep-research"
+  ],
+  "interface": {
+    "displayName": "Research Powerpack",
+    "shortDescription": "Cited web research with verbatim quotes",
+    "longDescription": "Answers, deep research runs and fact-checks where every claim points at a verbatim quote the server pulled from the page. A quote ledger lives on disk, and hooks flag unknown ids, uncited numbers and numbers the cited quote does not state.",
+    "developerName": "yigitkonur",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Research whether library X supports Y and cite the exact lines"
+    ],
+    "websiteURL": "https://github.com/yigitkonur/plugin-research-powerpack"
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.codex-mcp.json",
+  "hooks": "./hooks/codex-hooks.json"
+}

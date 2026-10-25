@@ -9,7 +9,7 @@ Request: $ARGUMENTS
 
 Answer the request with cited evidence. Follow these steps in order.
 
-1. **Load the method.** Invoke the `research:method` skill with the Skill tool, unless its text is already in this conversation.
+1. **Load the method.** Invoke the `research:method` skill with the Skill tool (in Codex, read the method skill's SKILL.md), unless its text is already in this conversation.
 
 2. **Split the request.** `--save` and `--background` are flags. Everything else is the question or the URLs. If nothing else remains, ask the user for the question and stop.
 

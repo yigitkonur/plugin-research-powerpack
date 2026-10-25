@@ -1,0 +1,41 @@
+{
+  "description": "Research plugin for Codex: enforce Research Powerpack limits, keep a quote ledger outside the context window, check citations at write time.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^mcp__(research_powerpack|research-mcp)__(web[-_]search|extract[-_]evidence)$",
+        "hooks": [
+          { "type": "command", "command": "node \"${PLUGIN_ROOT}/scripts/hook.mjs\" guard --host=codex", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^mcp__(research_powerpack|research-mcp)__(plan[-_]research|web[-_]search|extract[-_]evidence)$",
+        "hooks": [
+          { "type": "command", "command": "node \"${PLUGIN_ROOT}/scripts/hook.mjs\" record --host=codex", "timeout": 15 }
+        ]
+      },
+      {
+        "matcher": "^(apply_patch|Edit|Write)$",
+        "hooks": [
+          { "type": "command", "command": "node \"${PLUGIN_ROOT}/scripts/hook.mjs\" cite --host=codex", "timeout": 10 }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"${PLUGIN_ROOT}/scripts/hook.mjs\" session --host=codex", "timeout": 10 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"${PLUGIN_ROOT}/scripts/hook.mjs\" stop --host=codex", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}

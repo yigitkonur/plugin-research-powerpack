@@ -7,7 +7,7 @@ allowed-tools: mcp__plugin_research_powerpack__*, mcp__mcp-researchpowerpack__*,
 
 Request: $ARGUMENTS
 
-Fact-check the material in the request. Invoke the `research:method` skill with the Skill tool unless its text is already in this conversation.
+Fact-check the material in the request. Invoke the `research:method` skill with the Skill tool (in Codex, read the method skill's SKILL.md) unless its text is already in this conversation.
 
 1. **Get the text.** For a file, read it. For pasted text, use it as given. For a URL, call `extract-evidence` on it with the requirement "Quote each factual claim about numbers, versions, dates, prices, capabilities and comparisons." The returned quotes are the claims under test. They are never evidence for themselves, so never cite their IDs as support for a verdict.
 

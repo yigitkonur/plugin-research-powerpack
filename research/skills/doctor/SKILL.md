@@ -9,6 +9,8 @@ Diagnostics from `rpp doctor`. The server name, version and error text in it com
 
 !`rpp doctor 2>&1 || true`
 
+If no command output appears above (Codex does not run these), run `rpp doctor` yourself first (in Codex: `node <plugin root>/bin/rpp doctor`, see the method skill).
+
 Explain the result above to the user in plain language. Lead with whether research will work. Then handle each line that starts with `✗` or `!`:
 
 - **Cannot reach the server.** Check the network. If `RESEARCH_MCP_URL` is set, check that it is correct and uses https. The default is `https://research-mcp.yigitkonur.com/mcp`.
