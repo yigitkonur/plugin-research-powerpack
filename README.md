@@ -17,6 +17,14 @@ this plugin fixes both:
 
 ## install
 
+one line (it adds the marketplace and installs the plugin in one go):
+
+```shell
+claude plugin install research --marketplace yigitkonur/plugin-research-powerpack
+```
+
+or the two-step version:
+
 ```shell
 claude plugin marketplace add yigitkonur/plugin-research-powerpack
 claude plugin install research@plugin-research-powerpack
@@ -29,17 +37,23 @@ or from inside a claude code session:
 /plugin install research@plugin-research-powerpack
 ```
 
-or in one line:
-
-```shell
-claude plugin install research --marketplace yigitkonur/plugin-research-powerpack
-```
+no ssh key on that machine? use the https url: `claude plugin marketplace add https://github.com/yigitkonur/plugin-research-powerpack.git`.
 
 the installer says 3 userConfig options aren't set yet. that's expected, they all have defaults (`/plugin configure research` if you want to change them).
 
+### one project only, switched off until you want it
+
+```shell
+cd your-project
+claude plugin install research --marketplace yigitkonur/plugin-research-powerpack --scope project
+claude plugin disable research@plugin-research-powerpack --scope project
+```
+
+it's installed for that project but off, so it costs nothing in other sessions. turn it on when you need it with `claude plugin enable research@plugin-research-powerpack --scope project` (off again with `disable`). restart claude code after either.
+
 restart claude code (or run `/reload-plugins`), then run `/research:doctor` to check the server is reachable. that's it, no api key.
 
-needs claude code 2.1.271 or newer and node 20+ on your path (the hooks and the `rpp` cli are zero-dependency node scripts).
+needs claude code 2.1.275 or newer (that's what the one-line install needs) and node 20+ on your path (the hooks and the `rpp` cli are zero-dependency node scripts).
 
 update later with `claude plugin update research@plugin-research-powerpack`. remove with `claude plugin uninstall research@plugin-research-powerpack`.
 
