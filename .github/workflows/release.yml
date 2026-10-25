@@ -1,0 +1,56 @@
+name: release
+
+# A change to the plugin on main bumps the version, tags it and publishes a release, so every installed
+# copy (marketplace auto-update) picks it up. Docs and recordings do not trigger a release.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'research/**'
+      - '!research/README.md'
+      - '!research/LICENSE'
+      - '!research/recordings/**'
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: version part to bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # the release commit below carries [skip ci]; this guard also stops a loop if that ever changes
+    if: github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, '[skip ci]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: replay checks
+        run: node research/recordings/replay.mjs
+      - name: bump, commit, tag
+        id: bump
+        run: |
+          version=$(node .github/scripts/bump.mjs "${{ inputs.bump || 'patch' }}")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research/.claude-plugin/plugin.json .claude-plugin/marketplace.json
+          git commit -m "chore(release): research v${version} [skip ci]"
+          git tag "research--v${version}"
+          git push origin HEAD:main "research--v${version}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - name: github release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "research--v${{ steps.bump.outputs.version }}" --title "research v${{ steps.bump.outputs.version }}" --generate-notes --latest
