@@ -55,7 +55,11 @@ restart claude code (or run `/reload-plugins`), then run `/research:doctor` to c
 
 needs claude code 2.1.275 or newer (that's what the one-line install needs) and node 20+ on your path (the hooks and the `rpp` cli are zero-dependency node scripts).
 
-update later with `claude plugin update research@plugin-research-powerpack`. remove with `claude plugin uninstall research@plugin-research-powerpack`.
+### updates
+
+every change to the plugin on `main` bumps the version, tags it (`research--vX.Y.Z`) and publishes a github release automatically (see `.github/workflows/release.yml`). claude code doesn't auto-update third-party marketplaces by default, so switch it on once: `/plugin`, then the marketplaces tab, then `plugin-research-powerpack`, then enable auto-update. after that new versions download on their own a few minutes into a session and load on the next launch (or `/reload-plugins`).
+
+update by hand any time with `claude plugin update research@plugin-research-powerpack`. remove with `claude plugin uninstall research@plugin-research-powerpack`.
 
 ## what's in the box
 
