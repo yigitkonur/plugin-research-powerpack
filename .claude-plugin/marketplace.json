@@ -6,13 +6,13 @@
   },
   "metadata": {
     "description": "Evidence-grounded web research for Claude Code on the Research Powerpack MCP: cited answers, deep reports and comparison corpora on disk, fact-checks, and hooks that keep every claim tied to a verbatim quote.",
-    "version": "0.2.2"
+    "version": "0.2.3"
   },
   "plugins": [
     {
       "name": "research",
       "description": "Cited answers, deep research runs that write reports or comparison corpora to disk, and fact-checks, on the bundled Research Powerpack MCP. Hooks keep a quote ledger outside the context window and block uncited or mis-cited numbers.",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "author": {
         "name": "yigitkonur",
         "url": "https://github.com/yigitkonur"

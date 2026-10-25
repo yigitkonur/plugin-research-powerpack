@@ -1,7 +1,7 @@
 {
   "name": "research",
   "displayName": "Research Powerpack",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Evidence-grounded web research: bundles the Research Powerpack MCP with ask, deep, verify and doctor skills, scout, analyst and auditor agents, and hooks that keep a quote ledger outside the context window.",
   "author": {
     "name": "yigitkonur",
