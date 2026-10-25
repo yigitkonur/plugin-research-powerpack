@@ -2,18 +2,7 @@
 
 the internals of the `research` plugin: how the evidence pipeline works, the `rpp` cli, settings, and the honest list of limits. the quick tour lives in the [repo readme](https://github.com/yigitkonur/plugin-research-powerpack#readme).
 
-install (claude code 2.1.275+):
-
-```shell
-claude plugin install research --marketplace yigitkonur/plugin-research-powerpack
-```
-
-install in codex:
-
-```shell
-codex plugin marketplace add yigitkonur/plugin-research-powerpack
-codex plugin add research@plugin-research-powerpack
-```
+install: see the [install section of the repo readme](https://github.com/yigitkonur/plugin-research-powerpack#install). research is installed globally and stays on in claude code and codex.
 
 ## how it works
 

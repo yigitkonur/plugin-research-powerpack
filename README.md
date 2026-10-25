@@ -15,72 +15,69 @@ this plugin fixes both:
 - **the hooks check the work.** a cited number has to actually appear in the cited quote. a quote that's just a "Latest" button or an avatar link gets flagged as thin. unknown ids, uncited numbers, blank table cells, `TBD`s and dead links block a research run from finishing.
 - **tool output gets compacted.** the model still sees every quote, but across 130 recorded extraction calls it read 62% fewer characters than the raw output, and 74% fewer on searches (top 12 leads, the rest stay in the ledger).
 
+<!-- kit:install:start -->
 ## install
 
-works in **claude code** and **codex**. the same repo is a marketplace for both.
+This plugin is the one exception to our install-off rule: it is installed **globally and stays on in every project**, in Claude Code and Codex.
 
-### claude code
+### 1. install it globally
 
-one line (it adds the marketplace and installs the plugin in one go):
+**Claude Code**
 
-```shell
-claude plugin install research --marketplace yigitkonur/plugin-research-powerpack
-```
-
-or the two-step version:
-
-```shell
+```sh
 claude plugin marketplace add yigitkonur/plugin-research-powerpack
-claude plugin install research@plugin-research-powerpack
+claude plugin install research@plugin-research-powerpack -s user
 ```
 
-or from inside a claude code session: `/plugin marketplace add yigitkonur/plugin-research-powerpack`, then `/plugin install research@plugin-research-powerpack`.
+**Codex** (0.163+)
 
-no ssh key on that machine? use the https url: `claude plugin marketplace add https://github.com/yigitkonur/plugin-research-powerpack.git`.
-
-the installer says 3 userConfig options aren't set yet. that's expected, they all have defaults (`/plugin configure research` if you want to change them).
-
-restart claude code (or run `/reload-plugins`), then run `/research:doctor` to check the server is reachable. that's it, no api key.
-
-needs claude code 2.1.275 or newer (that's what the one-line install needs) and node 20+ on your path (the hooks and the `rpp` cli are zero-dependency node scripts).
-
-### codex
-
-```shell
+```sh
 codex plugin marketplace add yigitkonur/plugin-research-powerpack
 codex plugin add research@plugin-research-powerpack
 ```
 
-codex reviews a plugin's hooks the first time: open `codex`, pick "trust all" on the "hooks need review" screen. what's different from claude code: no `/research:*` slash commands (say "use the research ask skill to ..." or `$ask`), no scout/analyst/auditor agent types (the skills spawn plain codex agents or do the step themselves), and the tool output isn't shortened (the hook lists the new quote ids instead). the server url is fixed in `.codex-mcp.json`; `rpp` still honors `RESEARCH_MCP_URL`.
+All our plugins, both hosts, plus the `plugin` command and the 6-hourly update job, in one line:
 
-### installed everywhere, switched on per project
-
-the plugin adds three skills' worth of text and a few tools to every chat, so if you don't research in most projects, keep it installed but off and turn it on where you need it.
-
-```shell
-# once per machine
-claude plugin disable research@plugin-research-powerpack --scope user
-codex-plugin-project.sh global-off research@plugin-research-powerpack   # helper, see below
-
-# in a project, when you want it (restart the agent there after)
-claude plugin enable research@plugin-research-powerpack --scope project
-codex-plugin-project.sh on research@plugin-research-powerpack . --trust
-
-# and off again
-claude plugin disable research@plugin-research-powerpack --scope project
-codex-plugin-project.sh off research@plugin-research-powerpack
+```sh
+curl -fsSL https://raw.githubusercontent.com/yigitkonur/plugin-kit/main/install.sh | sh -s -- --all
 ```
 
-codex has no `plugin enable/disable` command, so `codex-plugin-project.sh` edits the config for you: `global-off` writes `enabled = false` into `~/.codex/config.toml`, `on` writes `enabled = true` into `<project>/.codex/config.toml`. codex ignores a project's `.codex/config.toml` unless the project is trusted, which `--trust` adds to `~/.codex/config.toml`. trusting a project also turns on its hooks and rules, so only do it for projects you own. check with `codex plugin list` and `codex mcp list`. the script is a short bash+python3 file, [grab it here](https://github.com/yigitkonur/plugin-research-powerpack/blob/main/scripts/codex-plugin-project.sh).
+### 2. updates
 
-### updates
+A plugin updates only when its `version` changes, and this repo's `release` workflow bumps it on every shipped change. Machines pick it up with `plugin update`, or by themselves with the 6-hourly job (`plugin autoupdate install`). By hand:
 
-every change to the plugin on `main` bumps the version in the claude manifest, the codex manifest and the marketplace together, tags it (`research--vX.Y.Z`) and publishes a github release automatically (see `.github/workflows/release.yml`).
+```sh
+claude plugin marketplace update plugin-research-powerpack && claude plugin update research@plugin-research-powerpack
+codex plugin marketplace upgrade plugin-research-powerpack        # then start a new session
+```
 
-- claude code: doesn't auto-update third-party marketplaces by default, so switch it on once: `/plugin`, then the marketplaces tab, then `plugin-research-powerpack`, then enable auto-update. after that new versions download on their own a few minutes into a session and load on the next launch (or `/reload-plugins`). by hand: `claude plugin update research@plugin-research-powerpack`.
-- codex: `codex plugin marketplace upgrade plugin-research-powerpack` moves the installed plugin to the new version, then start a new session.
+No GitHub SSH key on the machine? `export CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` (`plugin install` sets it in Claude's settings for you).
 
-remove with `claude plugin uninstall research@plugin-research-powerpack` or `codex plugin remove research@plugin-research-powerpack`.
+### 3. uninstall
+
+```sh
+claude plugin uninstall research@plugin-research-powerpack -s user
+claude plugin marketplace remove plugin-research-powerpack
+codex plugin remove research@plugin-research-powerpack
+codex plugin marketplace remove plugin-research-powerpack
+```
+<!-- kit:install:end -->
+
+### research is installed globally and stays on
+
+unlike our other plugins, research is installed globally and stays on in claude code and codex, in every project. there is nothing to switch on per project.
+
+### first run
+
+the claude code installer says 3 userConfig options aren't set yet. that's expected, they all have defaults (`/plugin configure research` if you want to change them).
+
+restart claude code (or run `/reload-plugins`), then run `/research:doctor` to check the server is reachable. that's it, no api key.
+
+needs node 20+ on your path (the hooks and the `rpp` cli are zero-dependency node scripts).
+
+### codex differences
+
+codex reviews a plugin's hooks the first time: open `codex`, pick "trust all" on the "hooks need review" screen. what's different from claude code: no `/research:*` slash commands (say "use the research ask skill to ..." or `$ask`), no scout/analyst/auditor agent types (the skills spawn plain codex agents or do the step themselves), and the tool output isn't shortened (the hook lists the new quote ids instead). the server url is fixed in `.codex-mcp.json`; `rpp` still honors `RESEARCH_MCP_URL`. check with `codex plugin list` and `codex mcp list`.
 
 ## what's in the box
 
